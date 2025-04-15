@@ -1,6 +1,7 @@
 // Import des fonctions depuis le fichier API
 import { initializeMoviesPage } from './api/moviesApi.js';
 import { initializeSeriesPage } from './api/seriesApi.js';
+import { getAutocompleteResults } from './components/search.js';
 
 // Fonction d'initialisation principale
 async function init() {
@@ -68,6 +69,23 @@ async function init() {
     console.log('Page d\'accueil chargée');
     // Code spécifique à la page d'accueil si nécessaire
   }
+  
+  // main.js
+
+// Fonction pour récupérer les séries populaires
+async function getPopularSeries(query) {
+  const response = await fetch(`https://api.example.com/series/popular?query=${query}`);
+  const data = await response.json();
+  return data.page;
+}
+
+// Fonction pour récupérer les films populaires
+async function getPopularMovies(query) {
+  const response = await fetch(`https://api.example.com/movies/popular?query=${query}`);
+  const data = await response.json();
+  return data.page;
+}
+
 }
 
 // Attendre que le DOM soit chargé avant d'initialiser
