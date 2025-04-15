@@ -1,5 +1,5 @@
-// Chemin d'importation corrigé - ne pas utiliser ./ mais un chemin relatif à l'emplacement du fichier
-import { displayMovieImages } from './api/moviesApi.js';
+// Import des fonctions depuis le fichier API
+import { initializeMoviesPage } from './api/moviesApi.js';
 
 // Fonction d'initialisation principale
 async function init() {
@@ -12,8 +12,8 @@ async function init() {
   if (currentPage.includes('movies.html')) {
     console.log('Page Films détectée, chargement des films...');
     try {
-      await displayMovieImages();
-      console.log('Films chargés avec succès');
+      await initializeMoviesPage();
+      console.log('Page Films initialisée avec succès');
     } catch (error) {
       console.error('Erreur lors du chargement des films:', error);
       document.getElementById('main').innerHTML = `
