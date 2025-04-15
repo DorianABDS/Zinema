@@ -1,15 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Favori</title>
+    <title>Accueil</title>
     <!-- JavaScript -->
     <script src="main.js"></script>
     <!-- Tailwind -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
-<body>
-    
+<body class="bg-gray-900">
+    <header class="flex items-center p-4 bg-black/60 text-white h-20">
+        <h1 style="font-family: 'Cinzel Decorative', serif;" class="text-3xl ml-2"><span class="text-red-700">Z</span>inema</h1>
+        <nav>
+            <ul class="flex gap-4 ml-20 text-xl" >
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="movies.html"></a>Films</li>
+                <li><a href="series.html">Séries</a></li>
+                <li><a href="favorites.html">Favoris</a></li>
+            </ul>
+        </nav>
+        <div class="search_bar ml-auto flex items-center mr-10" id="search_bar">
+            <input type="text" placeholder="Rechercher un film ou une série" id="search_input" class="p-2 pl-5 rounded-full bg-gray-700 text-white w-70">
+        </div>
+    </header>
+
+    <main id="main">
+
+    </main>
+
+    <footer class="flex justify-center items-center bg-black text-white h-20 mt-10">
+        <h1>© ZYNEMA -- 2025 ©</h1>
+    </footer>
 </body>
 </html>
