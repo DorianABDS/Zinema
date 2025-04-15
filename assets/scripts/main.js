@@ -1,5 +1,6 @@
 // Import des fonctions depuis le fichier API
 import { initializeMoviesPage } from './api/moviesApi.js';
+import { initializeSeriesPage } from './api/seriesApi.js';
 
 // Fonction d'initialisation principale
 async function init() {
@@ -28,7 +29,20 @@ async function init() {
   // Page Séries
   else if (currentPage.includes('series.html')) {
     console.log('Page Séries chargée');
-    // Ajouter le code pour afficher les séries ici
+    console.log('Page Séries détectée, chargement des séries...');
+    try {
+    await initializeSeriesPage();
+    console.log('Page Séries initialisée avec succès');
+    } catch (error) {
+    console.error('Erreur lors du chargement des séries:', error);
+    document.getElementById('main').innerHTML = `
+        <div class="text-center text-white p-10">
+        <h2 class="text-2xl">Erreur de chargement</h2>
+        <p class="mt-4">Impossible de charger les séries. Vérifiez votre clé API et votre connexion.</p>
+        <p class="mt-2 text-red-500">${error.message}</p>
+        </div>
+    `;
+    }
   }
   // Page Détails
   else if (currentPage.includes('details.html')) {
