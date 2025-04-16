@@ -48,8 +48,8 @@ function createSeriesCard(serie) {
   date.className = 'text-gray-400 text-center text-sm';
 
   if (serie.vote_average) {
-    const rating = document.createElement('div');
-    rating.className = 'absolute top-2 right-2 bg-black/80 text-white px-2 py-1 rounded-full text-sm';
+    const rating = document.createElement('span');
+    rating.className = 'absolute top-2 right-2 px-2 py-1 rounded-full text-sm ring-1 ring-inset ring-yellow-600/50 dark:bg-black/60 dark:text-yellow-300 dark:ring-yellow-300/20';
     rating.textContent = serie.vote_average.toFixed(1);
     card.appendChild(rating);
   }
