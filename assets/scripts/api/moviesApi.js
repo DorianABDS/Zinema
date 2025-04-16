@@ -1,7 +1,35 @@
-const API_KEY = '810f7bae435ef7e7f5d46a2c4deb733e';
+const API_KEY = '8c4b867188ee47a1d4e40854b27391ec'; // Clé API TMDB
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
+let currentPage = 1;
+
+// === Récupérer une page complète de films populaires ===
+export async function getPopularMovies(page = 1) {
+  try {
+    console.log(`Récupération de la page ${page} des films populaires...`);
+    const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=fr-FR&page=${page}`);
+    
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      console.log(`${data.results.length} films trouvés à la page ${page}`);
+      return data.results;
+    } else {
+      console.log('Aucun résultat trouvé pour cette page');
+      return [];
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des films:', error);
+    throw error;
+  }
+}
+
+// === Version alternative avec 12 films + totalResults (utile pour pagination manuelle) ===
 export async function fetchMoviesPage(page = 1) {
   try {
     const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=fr-FR&page=${page}`);
@@ -17,6 +45,7 @@ export async function fetchMoviesPage(page = 1) {
   }
 }
 
+// === Créer une carte de film ===
 export function createMovieCard(movie) {
   const card = document.createElement('div');
   card.className = 'movie-card relative w-48 mb-6 cursor-pointer transition-all duration-300 hover:scale-105';
@@ -51,4 +80,60 @@ export function createMovieCard(movie) {
   card.appendChild(date);
 
   return card;
+}
+
+// === Créer le conteneur de films ===
+function createMoviesContainer() {
+  const main = document.getElementById('main');
+  const container = document.createElement('div');
+  container.className = 'movies-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 p-6 place-items-center';
+  main.appendChild(container);
+  return container;
+}
+
+// === Initialiser la page de films sans scroll infini ===
+export async function initializeMoviesPage() {
+  try {
+    console.log('Initialisation de la page de films...');
+    const main = document.getElementById('main');
+    
+    if (!main) {
+      console.error('Élément #main non trouvé dans le document');
+      return;
+    }
+    
+    main.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'text-white text-center pt-6 pb-4';
+    header.innerHTML = '<h1 class="text-3xl font-bold">Films Populaires</h1>';
+    main.appendChild(header);
+    
+    const container = createMoviesContainer();
+    
+    const initialMovies = await getPopularMovies(currentPage);
+    
+    if (initialMovies.length === 0) {
+      container.innerHTML = '<div class="text-white text-center p-10">Aucun film trouvé</div>';
+      return;
+    }
+
+    initialMovies.forEach(movie => {
+      const movieCard = createMovieCard(movie);
+      container.appendChild(movieCard);
+    });
+
+    console.log('Page de films initialisée avec succès');
+  } catch (error) {
+    console.error('Erreur lors de l\'initialisation de la page de films:', error);
+    const main = document.getElementById('main');
+    if (main) {
+      main.innerHTML = `
+        <div class="text-center text-white p-10">
+          <h2 class="text-2xl">Erreur de chargement</h2>
+          <p class="mt-4">Impossible de charger les films: ${error.message}</p>
+        </div>
+      `;
+    }
+  }
 }
