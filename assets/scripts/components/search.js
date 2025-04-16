@@ -1,3 +1,4 @@
+
 // Récupération du champ de recherche dans le DOM
 let searchInput = document.getElementById('search_input');
 
