@@ -35,7 +35,7 @@ async function init() {
     console.log('Page Séries initialisée avec succès');
     } catch (error) {
     console.error('Erreur lors du chargement des séries:', error);
-    document.getElementById('main').innerHTML = `
+    document.querySelectorAll('#main').innerHTML = `
         <div class="text-center text-white p-10">
         <h2 class="text-2xl">Erreur de chargement</h2>
         <p class="mt-4">Impossible de charger les séries. Vérifiez votre clé API et votre connexion.</p>
@@ -72,3 +72,17 @@ async function init() {
 
 // Attendre que le DOM soit chargé avant d'initialiser
 document.addEventListener('DOMContentLoaded', init);
+
+document.addEventListener('DOMContentLoaded', () => {
+  const burger = document.getElementById('burger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const overlay = document.getElementById('overlay');
+
+  function toggleMenu() {
+    mobileMenu.classList.toggle('translate-x-full');
+    overlay.classList.toggle('hidden');
+  }
+
+  burger.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', toggleMenu);
+});
