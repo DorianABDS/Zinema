@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accueil</title>
     <!-- JavaScript -->
-    <script src="main.js"></script>
+    <script type="module" defer src="/assets/scripts/main.js"></script>
     <!-- Tailwind -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Font -->
@@ -25,7 +25,7 @@
             </ul>
         </nav>
         <div class="search_bar ml-auto flex items-center mr-10" id="search_bar">
-            <input type="text" placeholder="Rechercher un film ou une série" id="search_input" class="p-2 pl-5 rounded-full bg-gray-700 text-white w-70">
+            <input type="text" placeholder="Rechercher un film ou une série" autocomplete="off" id="search_input" class="p-2 pl-5 rounded-full bg-gray-700 text-white w-70">
         </div>
     </header>
 
