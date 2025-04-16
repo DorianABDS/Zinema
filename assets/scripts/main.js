@@ -48,13 +48,13 @@ async function init() {
     console.log('Page Films détectée, chargement des films...');
     loadContent('movie', 1); //  On utilise la version avec pagination
     initSearch(); // Initialiser la recherche
-    fetchAutocompleteResults()
+    fetchAutocompleteResults(query)
   }
   else if (currentPage.includes('series.html')) {
     console.log('Page Séries détectée, chargement des séries...');
     loadContent('series', 1); // Idem pour les séries
     initSearch(); // Initialiser la recherche
-    fetchAutocompleteResults()
+    fetchAutocompleteResults(query)
 
   }
   else if (currentPage.includes('details.html')) {
@@ -69,6 +69,11 @@ async function init() {
   }
   else if (currentPage.includes('favorites.html')) {
     console.log('Page Favoris chargée');
+    initSearch(); // Initialiser la recherche
+    // Ajouter le code pour afficher les favoris ici
+  }
+  else if (currentPage.includes('index.html')) {
+    console.log('Page index chargée');
     initSearch(); // Initialiser la recherche
     // Ajouter le code pour afficher les favoris ici
   }
