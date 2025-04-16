@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Accueil</title>
   <!-- Script -->
-   <script type="module" defer src="/assets/scripts/main.js"></script>
+  <script type="module" defer src="/assets/scripts/main.js"></script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font -->
@@ -27,8 +27,8 @@
             <li><a href="/pages/favorites.html">Favoris</a></li>
         </ul>
         <!-- Search bar in mobile menu -->
-        <div class="mb-6">
-          <input type="text" placeholder="Rechercher un film ou une série"
+        <div class="search_bar mb-6 relative">
+          <input id="search_input_mobile" type="text" placeholder="Rechercher un film ou une série"
                  class="p-2 pl-4 rounded-full bg-gray-700 text-white w-full" />
         </div>
     </nav>
@@ -61,9 +61,9 @@
         </nav>
   
         <!-- Desktop Search -->
-        <div class="hidden md:flex items-center ml-auto">
-          <input type="text" placeholder="Rechercher un film ou une série"
-                 class="p-2 pl-5 rounded-full bg-gray-700 text-white w-72" />
+        <div class="hidden md:flex items-center ml-auto search_bar relative">
+          <input id="search_input" type="text" placeholder="Rechercher un film ou une série"
+       class="p-2 pl-5 rounded-full bg-gray-700 text-white w-72" />
         </div>
       </div>
     </header>

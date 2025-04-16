@@ -2,6 +2,8 @@
 import { fetchMoviesPage, createMovieCard, initializeMoviesPage } from './api/moviesApi.js';
 import { fetchSeriesPage, createSeriesCard, initializeSeriesPage } from './api/seriesApi.js';
 import { createPagination } from './components/pagination.js';
+import { initSearch } from './components/search.js';
+import { fetchAutocompleteResults } from './components/search.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
@@ -22,7 +24,7 @@ async function loadContent(type, page) {
     paginationContainer.className = 'pagination flex justify-center pb-6';
     
     main.innerHTML = '';
-    main.appendChild(container);
+    main.appendChild(container);  
     main.appendChild(paginationContainer);
 
     createPagination({
@@ -45,13 +47,19 @@ async function init() {
   if (currentPage.includes('movies.html')) {
     console.log('Page Films détectée, chargement des films...');
     loadContent('movie', 1); //  On utilise la version avec pagination
+    initSearch(); // Initialiser la recherche
+    fetchAutocompleteResults()
   }
   else if (currentPage.includes('series.html')) {
     console.log('Page Séries détectée, chargement des séries...');
     loadContent('series', 1); // Idem pour les séries
+    initSearch(); // Initialiser la recherche
+    fetchAutocompleteResults()
+
   }
   else if (currentPage.includes('details.html')) {
     console.log('Page Détails chargée');
+    initSearch(); // Initialiser la recherche
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     const type = urlParams.get('type');
@@ -61,10 +69,12 @@ async function init() {
   }
   else if (currentPage.includes('favorites.html')) {
     console.log('Page Favoris chargée');
+    initSearch(); // Initialiser la recherche
     // Ajouter le code pour afficher les favoris ici
   }
   else {
     console.log('Page d\'accueil chargée');
+    initSearch(); // Initialiser la recherche
     // Code spécifique à la page d'accueil si nécessaire
   }
 }
