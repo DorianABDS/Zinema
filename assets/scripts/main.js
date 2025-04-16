@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('overlay');
 
   function toggleMenu() {
-    mobileMenu.classList.toggle('translate-x-full');
-    overlay.classList.toggle('hidden');
+    mobileMenu?.classList.toggle('translate-x-full');
+    overlay?.classList.toggle('hidden');
   }
 
   burger.addEventListener('click', toggleMenu);
