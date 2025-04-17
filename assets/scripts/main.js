@@ -6,6 +6,7 @@ import { initSearch } from './components/search.js';
 import { fetchAutocompleteResults } from './components/search.js';
 import { fetchSeriesDetails, fetchMovieDetails } from './api/detailsApi.js';
 import { fetchMovieReviews, fetchTvReviews } from './api/reviewApi.js';
+import { initializeFavoritesPage } from './components/displayFavourite.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
@@ -641,4 +642,13 @@ function renderDetails(media) {
   contentWrapper.appendChild(details);
   container.appendChild(contentWrapper);
   main.appendChild(container);
+}
+
+// Dans le main.js existant
+if (window.location.pathname.includes('favorites.html')) {
+  initializeFavoritesPage();
+} else if (window.location.pathname.includes('movies.html')) {
+  initializeMoviesPage();
+} else if (window.location.pathname.includes('series.html')) {
+  initializeSeriesPage();
 }
