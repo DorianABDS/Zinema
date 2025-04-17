@@ -9,7 +9,7 @@ import { fetchMovieReviews, fetchTvReviews } from './api/reviewApi.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
-  main.innerHTML = '<div class="text-white p-4">Loading...</div>';
+  main.innerHTML = '<div class="text-white p-4">Chargement...</div>';
 
   try {
     const fetchFn = type === 'movie' ? fetchMoviesPage : fetchSeriesPage;
@@ -37,7 +37,7 @@ async function loadContent(type, page) {
     });
 
   } catch (error) {
-    main.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
+    main.innerHTML = `<div class="text-red-500 p-4">Erreur: ${error.message}</div>`;
   }
 }
 
@@ -63,7 +63,7 @@ function createTruncatedContent(text, maxLength = 150) {
   // And a "See more" button
   const toggleButton = document.createElement('button');
   toggleButton.className = 'text-xs text-yellow-400 hover:text-yellow-300 mt-1';
-  toggleButton.textContent = 'See more';
+  toggleButton.textContent = 'Voir plus';
   container.appendChild(toggleButton);
   
   // State to track if we're displaying the full text or truncated
@@ -74,11 +74,11 @@ function createTruncatedContent(text, maxLength = 150) {
     if (isExpanded) {
       // Reduce the text
       truncatedContent.textContent = text.substring(0, maxLength) + '...';
-      toggleButton.textContent = 'See more';
+      toggleButton.textContent = 'Voir plus';
     } else {
       // Display the full text
       truncatedContent.textContent = text;
-      toggleButton.textContent = 'See less';
+      toggleButton.textContent = 'Voir moins';
     }
     isExpanded = !isExpanded;
   });
@@ -104,14 +104,14 @@ function renderReviews(reviews) {
   
   const title = document.createElement('h3');
   title.className = 'text-2xl font-bold mb-4';
-  title.textContent = 'Reviews';
+  title.textContent = 'Avis';
   container.appendChild(title);
   
   // Display API reviews
   if (Array.isArray(reviews) && reviews.length > 0) {
     const apiReviewsTitle = document.createElement('h4');
     apiReviewsTitle.className = 'text-xl font-semibold mb-3 text-gray-300';
-    apiReviewsTitle.textContent = 'TMDB User Reviews';
+    apiReviewsTitle.textContent = 'Avis des utilisateurs';
     container.appendChild(apiReviewsTitle);
     
     reviews.forEach(review => {
@@ -123,7 +123,7 @@ function renderReviews(reviews) {
       
       const author = document.createElement('p');
       author.className = 'text-sm font-semibold text-yellow-300';
-      author.textContent = `Author: ${review.author}`;
+      author.textContent = `Auteur: ${review.author}`;
       authorContainer.appendChild(author);
       
       // Add rating with stars if available
@@ -154,7 +154,7 @@ function renderReviews(reviews) {
   } else if (Array.isArray(reviews)) {
     const noApiReview = document.createElement('p');
     noApiReview.className = 'text-gray-400 mb-4';
-    noApiReview.textContent = 'No reviews available on TMDB.';
+    noApiReview.textContent = 'Aucun avis disponible';
     container.appendChild(noApiReview);
   }
   
@@ -167,7 +167,7 @@ function renderReviews(reviews) {
   if (userReviews && userReviews.length > 0) {
     const userReviewsTitle = document.createElement('h4');
     userReviewsTitle.className = 'text-xl font-semibold mb-3 text-gray-300';
-    userReviewsTitle.textContent = 'Your Reviews';
+    userReviewsTitle.textContent = 'Vos avis';
     container.appendChild(userReviewsTitle);
     
     userReviews.forEach((review, index) => {
@@ -179,7 +179,7 @@ function renderReviews(reviews) {
       
       const author = document.createElement('p');
       author.className = 'text-sm font-semibold text-yellow-300';
-      author.textContent = `Author: ${review.author}`;
+      author.textContent = `Auteur: ${review.author}`;
       header.appendChild(author);
       
       if (review.rating) {
@@ -207,7 +207,7 @@ function renderReviews(reviews) {
       if (review.created_at) {
         const date = document.createElement('p');
         date.className = 'text-xs text-gray-500 mt-2';
-        date.textContent = `Published on ${new Date(review.created_at).toLocaleDateString()}`;
+        date.textContent = `Publié le ${new Date(review.created_at).toLocaleDateString()}`;
         reviewBlock.appendChild(date);
       }
       
@@ -215,9 +215,9 @@ function renderReviews(reviews) {
       const deleteButton = document.createElement('button');
       deleteButton.className = 'absolute top-10 right-0 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center';
       deleteButton.innerHTML = '×';
-      deleteButton.title = 'Delete this review';
+      deleteButton.title = 'Supprimer cet avis';
       deleteButton.addEventListener('click', () => {
-        if (confirm('Are you sure you want to delete this review?')) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cet avis ?')) {
           deleteReview(mediaId, mediaType, index);
           location.reload(); // Refresh page to update display
         }
@@ -231,7 +231,7 @@ function renderReviews(reviews) {
   // Add review form
   const formTitle = document.createElement('h4');
   formTitle.className = 'text-xl font-semibold my-4 text-gray-300';
-  formTitle.textContent = 'Add Your Review';
+  formTitle.textContent = 'Ajouté votre avis';
   container.appendChild(formTitle);
   
   const form = document.createElement('form');
@@ -243,7 +243,7 @@ function renderReviews(reviews) {
   const nameLabel = document.createElement('label');
   nameLabel.htmlFor = 'username';
   nameLabel.className = 'block text-sm font-medium mb-1';
-  nameLabel.textContent = 'Your name:';
+  nameLabel.textContent = 'Votre nom :';
   
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
@@ -261,7 +261,7 @@ function renderReviews(reviews) {
   const contentLabel = document.createElement('label');
   contentLabel.htmlFor = 'reviewContent';
   contentLabel.className = 'block text-sm font-medium mb-1';
-  contentLabel.textContent = 'Your review:';
+  contentLabel.textContent = 'Votre avis:';
   
   const contentTextarea = document.createElement('textarea');
   contentTextarea.id = 'reviewContent';
@@ -279,7 +279,7 @@ function renderReviews(reviews) {
   const ratingLabel = document.createElement('label');
   ratingLabel.htmlFor = 'rating';
   ratingLabel.className = 'block text-sm font-medium mb-1';
-  ratingLabel.textContent = 'Your rating:';
+  ratingLabel.textContent = 'Votre note:';
   ratingGroup.appendChild(ratingLabel);
 
   // Container for stars
@@ -360,7 +360,7 @@ function renderReviews(reviews) {
   const submitButton = document.createElement('button');
   submitButton.type = 'submit';
   submitButton.className = 'bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded';
-  submitButton.textContent = 'Publish my review';
+  submitButton.textContent = 'Publié mon avis';
   form.appendChild(submitButton);
   
   // Event listener for form
@@ -371,7 +371,7 @@ function renderReviews(reviews) {
     const rating = parseFloat(ratingInput.value);
     
     if (rating === 0) {
-      alert('Please give a rating by clicking on the stars.');
+      alert('Veuillez donner une note en cliquant sur les étoiles.');
       return;
     }
     
@@ -411,7 +411,7 @@ function saveReview(mediaId, mediaType, username, content, rating) {
   localStorage.setItem(storageKey, JSON.stringify(reviews));
   
   // Show confirmation message
-  alert('Your review has been published!');
+  alert('Votre avis a été publié !');
 }
 
 // Function to get user reviews from localStorage
@@ -576,12 +576,12 @@ function renderDetails(media) {
 
   const date = document.createElement('p');
   date.className = 'text-sm text-gray-400';
-  date.textContent = `Release date: ${media.release_date}`; // Changed from date_sortie to release_date
+  date.textContent = `Date de sortie: ${media.release_date}`; // Changed from date_sortie to release_date
   details.appendChild(date);
 
   const note = document.createElement('p');
   note.className = 'text-sm text-yellow-400';
-  note.textContent = `Average rating: ${media.rating}/10`; // Changed from note to rating
+  note.textContent = `Note moyenne: ${media.rating}/10`; // Changed from note to rating
   details.appendChild(note);
 
   const genres = document.createElement('p');
@@ -596,14 +596,15 @@ function renderDetails(media) {
 
   const actorsTitle = document.createElement('h3');
   actorsTitle.className = 'text-xl font-semibold mt-4 mb-2';
-  actorsTitle.textContent = 'Main actors:';
+  actorsTitle.textContent = 'Acteurs principaux :';
   details.appendChild(actorsTitle);
 
   const actorList = document.createElement('div');
   actorList.className = 'grid grid-cols-2 gap-4';
 
-  media.actors.forEach(actor => { // Changed from acteurs to actors
-    const card = document.createElement('div');
+  if (Array.isArray(media.actors)) {
+    media.actors.forEach(actor => {
+      const card = document.createElement('div');
     card.className = 'flex items-center gap-3';
 
     if (actor.photo) {
@@ -621,7 +622,7 @@ function renderDetails(media) {
 
     const role = document.createElement('p');
     role.className = 'text-sm text-gray-400';
-    role.textContent = `Role: ${actor.character}`; // Changed from personnage to character
+    role.textContent = `Rôle: ${actor.character}`; // Changed from personnage to character
     
     infos.appendChild(name);
     infos.appendChild(role);
@@ -629,6 +630,12 @@ function renderDetails(media) {
 
     actorList.appendChild(card);
   });
+} else {
+  const noActors = document.createElement('p');
+  noActors.className = 'text-sm text-gray-400';
+  noActors.textContent = 'Aucune information sur les acteurs disponible.';
+  actorList.appendChild(noActors);
+}
 
   details.appendChild(actorList);
   contentWrapper.appendChild(details);
