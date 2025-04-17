@@ -9,7 +9,7 @@ import { fetchMovieReviews, fetchTvReviews } from './api/reviewApi.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
-  main.innerHTML = '<div class="text-white p-4">Chargement...</div>';
+  main.innerHTML = '<div class="text-white p-4">Loading...</div>';
 
   try {
     const fetchFn = type === 'movie' ? fetchMoviesPage : fetchSeriesPage;
@@ -37,73 +37,434 @@ async function loadContent(type, page) {
     });
 
   } catch (error) {
-    main.innerHTML = `<div class="text-red-500 p-4">Erreur : ${error.message}</div>`;
+    main.innerHTML = `<div class="text-red-500 p-4">Error: ${error.message}</div>`;
   }
 }
 
-  function renderReviews(reviews) {
-    const main = document.getElementById('main');
-    if (!main || !Array.isArray(reviews)) return;
+  // Function to truncate text with a "See more" button
+function createTruncatedContent(text, maxLength = 150) {
+  const container = document.createElement('div');
   
-    const container = document.createElement('div');
-    container.className = 'max-w-4xl mx-auto mt-6 bg-gray-900 rounded-xl p-6 text-white shadow-md';
+  // If the text is short enough, display it directly
+  if (text.length <= maxLength) {
+    const content = document.createElement('p');
+    content.className = 'text-sm mt-2';
+    content.textContent = text;
+    container.appendChild(content);
+    return container;
+  }
   
-    const title = document.createElement('h3');
-    title.className = 'text-2xl font-bold mb-4';
-    title.textContent = 'Critiques des utilisateurs';
-    container.appendChild(title);
+  // Otherwise, create an element for the truncated version
+  const truncatedContent = document.createElement('p');
+  truncatedContent.className = 'text-sm mt-2';
+  truncatedContent.textContent = text.substring(0, maxLength) + '...';
+  container.appendChild(truncatedContent);
   
-    if (reviews.length === 0) {
-      const noReview = document.createElement('p');
-      noReview.className = 'text-gray-400';
-      noReview.textContent = 'Aucune critique disponible.';
-      container.appendChild(noReview);
+  // And a "See more" button
+  const toggleButton = document.createElement('button');
+  toggleButton.className = 'text-xs text-yellow-400 hover:text-yellow-300 mt-1';
+  toggleButton.textContent = 'See more';
+  container.appendChild(toggleButton);
+  
+  // State to track if we're displaying the full text or truncated
+  let isExpanded = false;
+  
+  // Event handler for the button
+  toggleButton.addEventListener('click', () => {
+    if (isExpanded) {
+      // Reduce the text
+      truncatedContent.textContent = text.substring(0, maxLength) + '...';
+      toggleButton.textContent = 'See more';
     } else {
-      reviews.forEach(review => {
-        const reviewBlock = document.createElement('div');
-        reviewBlock.className = 'mb-4 border-b border-gray-700 pb-4';
-  
-        const author = document.createElement('p');
-        author.className = 'text-sm font-semibold text-yellow-300';
-        author.textContent = `Auteur : ${review.author}`;
-        reviewBlock.appendChild(author);
-  
-        const content = document.createElement('p');
-        content.className = 'text-sm mt-2';
-        content.textContent = review.content;
-        reviewBlock.appendChild(content);
-  
-        container.appendChild(reviewBlock);
-      });
+      // Display the full text
+      truncatedContent.textContent = text;
+      toggleButton.textContent = 'See less';
     }
+    isExpanded = !isExpanded;
+  });
   
-    main.appendChild(container);
+  return container;
+}
+
+// Modified function to display reviews and form, with star rating system
+function renderReviews(reviews) {
+  const main = document.getElementById('main');
+  if (!main) return;
+
+  // Get the media ID and type from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const mediaId = urlParams.get('id');
+  const mediaType = urlParams.get('type');
+  
+  // Get user reviews from localStorage
+  const userReviews = getUserReviews(mediaId, mediaType);
+  
+  const container = document.createElement('div');
+  container.className = 'max-w-4xl mx-auto mt-6 bg-gray-900 rounded-xl p-6 text-white shadow-md';
+  
+  const title = document.createElement('h3');
+  title.className = 'text-2xl font-bold mb-4';
+  title.textContent = 'Reviews';
+  container.appendChild(title);
+  
+  // Display API reviews
+  if (Array.isArray(reviews) && reviews.length > 0) {
+    const apiReviewsTitle = document.createElement('h4');
+    apiReviewsTitle.className = 'text-xl font-semibold mb-3 text-gray-300';
+    apiReviewsTitle.textContent = 'TMDB User Reviews';
+    container.appendChild(apiReviewsTitle);
+    
+    reviews.forEach(review => {
+      const reviewBlock = document.createElement('div');
+      reviewBlock.className = 'mb-4 border-b border-gray-700 pb-4';
+      
+      const authorContainer = document.createElement('div');
+      authorContainer.className = 'flex justify-between items-center';
+      
+      const author = document.createElement('p');
+      author.className = 'text-sm font-semibold text-yellow-300';
+      author.textContent = `Author: ${review.author}`;
+      authorContainer.appendChild(author);
+      
+      // Add rating with stars if available
+      if (review.author_details && review.author_details.rating) {
+        const ratingStars = document.createElement('div');
+        ratingStars.className = 'flex text-yellow-400';
+        
+        // Calculate number of stars to display (scale 0-10)
+        const starCount = Math.round(review.author_details.rating / 2);
+        for (let i = 0; i < 5; i++) {
+          const star = document.createElement('span');
+          star.innerHTML = i < starCount ? '&#9733;' : '&#9734;';
+          star.className = 'text-lg';
+          ratingStars.appendChild(star);
+        }
+        
+        authorContainer.appendChild(ratingStars);
+      }
+      
+      reviewBlock.appendChild(authorContainer);
+      
+      // Use the function for truncated content
+      const contentContainer = createTruncatedContent(review.content);
+      reviewBlock.appendChild(contentContainer);
+      
+      container.appendChild(reviewBlock);
+    });
+  } else if (Array.isArray(reviews)) {
+    const noApiReview = document.createElement('p');
+    noApiReview.className = 'text-gray-400 mb-4';
+    noApiReview.textContent = 'No reviews available on TMDB.';
+    container.appendChild(noApiReview);
+  }
+  
+  // Divider
+  const divider = document.createElement('hr');
+  divider.className = 'my-6 border-gray-700';
+  container.appendChild(divider);
+  
+  // Display user reviews from localStorage
+  if (userReviews && userReviews.length > 0) {
+    const userReviewsTitle = document.createElement('h4');
+    userReviewsTitle.className = 'text-xl font-semibold mb-3 text-gray-300';
+    userReviewsTitle.textContent = 'Your Reviews';
+    container.appendChild(userReviewsTitle);
+    
+    userReviews.forEach((review, index) => {
+      const reviewBlock = document.createElement('div');
+      reviewBlock.className = 'mb-4 border-b border-gray-700 pb-4 relative';
+      
+      const header = document.createElement('div');
+      header.className = 'flex justify-between items-center';
+      
+      const author = document.createElement('p');
+      author.className = 'text-sm font-semibold text-yellow-300';
+      author.textContent = `Author: ${review.author}`;
+      header.appendChild(author);
+      
+      if (review.rating) {
+        const ratingStars = document.createElement('div');
+        ratingStars.className = 'flex text-yellow-400';
+        
+        // Calculate number of stars to display (scale 0-10)
+        const starCount = Math.round(review.rating / 2);
+        for (let i = 0; i < 5; i++) {
+          const star = document.createElement('span');
+          star.innerHTML = i < starCount ? '&#9733;' : '&#9734;';
+          star.className = 'text-lg';
+          ratingStars.appendChild(star);
+        }
+        
+        header.appendChild(ratingStars);
+      }
+      
+      reviewBlock.appendChild(header);
+      
+      // Use the function for truncated content
+      const contentContainer = createTruncatedContent(review.content);
+      reviewBlock.appendChild(contentContainer);
+      
+      if (review.created_at) {
+        const date = document.createElement('p');
+        date.className = 'text-xs text-gray-500 mt-2';
+        date.textContent = `Published on ${new Date(review.created_at).toLocaleDateString()}`;
+        reviewBlock.appendChild(date);
+      }
+      
+      // Delete button
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'absolute top-10 right-0 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center';
+      deleteButton.innerHTML = '×';
+      deleteButton.title = 'Delete this review';
+      deleteButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to delete this review?')) {
+          deleteReview(mediaId, mediaType, index);
+          location.reload(); // Refresh page to update display
+        }
+      });
+      reviewBlock.appendChild(deleteButton);
+      
+      container.appendChild(reviewBlock);
+    });
+  }
+  
+  // Add review form
+  const formTitle = document.createElement('h4');
+  formTitle.className = 'text-xl font-semibold my-4 text-gray-300';
+  formTitle.textContent = 'Add Your Review';
+  container.appendChild(formTitle);
+  
+  const form = document.createElement('form');
+  form.id = 'reviewForm';
+  form.className = 'space-y-4';
+  
+  // Username
+  const nameGroup = document.createElement('div');
+  const nameLabel = document.createElement('label');
+  nameLabel.htmlFor = 'username';
+  nameLabel.className = 'block text-sm font-medium mb-1';
+  nameLabel.textContent = 'Your name:';
+  
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.id = 'username';
+  nameInput.name = 'username';
+  nameInput.className = 'w-full bg-gray-800 text-white rounded p-2 border border-gray-700';
+  nameInput.required = true;
+  
+  nameGroup.appendChild(nameLabel);
+  nameGroup.appendChild(nameInput);
+  form.appendChild(nameGroup);
+  
+  // Review content
+  const contentGroup = document.createElement('div');
+  const contentLabel = document.createElement('label');
+  contentLabel.htmlFor = 'reviewContent';
+  contentLabel.className = 'block text-sm font-medium mb-1';
+  contentLabel.textContent = 'Your review:';
+  
+  const contentTextarea = document.createElement('textarea');
+  contentTextarea.id = 'reviewContent';
+  contentTextarea.name = 'reviewContent';
+  contentTextarea.rows = 5;
+  contentTextarea.className = 'w-full bg-gray-800 text-white rounded p-2 border border-gray-700';
+  contentTextarea.required = true;
+  
+  contentGroup.appendChild(contentLabel);
+  contentGroup.appendChild(contentTextarea);
+  form.appendChild(contentGroup);
+  
+  // Rating with stars (replaces numeric field)
+  const ratingGroup = document.createElement('div');
+  const ratingLabel = document.createElement('label');
+  ratingLabel.htmlFor = 'rating';
+  ratingLabel.className = 'block text-sm font-medium mb-1';
+  ratingLabel.textContent = 'Your rating:';
+  ratingGroup.appendChild(ratingLabel);
+
+  // Container for stars
+  const starsContainer = document.createElement('div');
+  starsContainer.className = 'flex items-center space-x-1 mb-4';
+
+  // Hidden input to store the value
+  const ratingInput = document.createElement('input');
+  ratingInput.type = 'hidden';
+  ratingInput.id = 'rating';
+  ratingInput.name = 'rating';
+  ratingInput.value = '0';
+  starsContainer.appendChild(ratingInput);
+
+  // Create 5 stars (scale 0-10, so each star is worth 2 points)
+  for (let i = 1; i <= 5; i++) {
+    const starWrapper = document.createElement('div');
+    starWrapper.className = 'cursor-pointer';
+    starWrapper.dataset.value = i * 2;
+    
+    const star = document.createElement('span');
+    star.className = 'text-2xl text-gray-400 hover:text-yellow-400';
+    star.innerHTML = '&#9733;'; // Full star character
+    star.id = `star-${i}`;
+    
+    // Add event listener for click
+    starWrapper.addEventListener('click', function() {
+      const value = this.dataset.value;
+      ratingInput.value = value;
+      
+      // Update star appearance
+      for (let j = 1; j <= 5; j++) {
+        const currentStar = document.getElementById(`star-${j}`);
+        if (j <= value/2) {
+          currentStar.className = 'text-2xl text-yellow-400';
+        } else {
+          currentStar.className = 'text-2xl text-gray-400';
+        }
+      }
+    });
+    
+    // Add hover effect
+    starWrapper.addEventListener('mouseover', function() {
+      const hoverValue = this.dataset.value;
+      for (let j = 1; j <= 5; j++) {
+        const currentStar = document.getElementById(`star-${j}`);
+        if (j <= hoverValue/2) {
+          currentStar.className = 'text-2xl text-yellow-400';
+        } else if (j > hoverValue/2 && ratingInput.value/2 >= j) {
+          // Keep colored stars already selected
+          currentStar.className = 'text-2xl text-yellow-400';
+        } else {
+          currentStar.className = 'text-2xl text-gray-400';
+        }
+      }
+    });
+    
+    starWrapper.addEventListener('mouseout', function() {
+      const currentValue = ratingInput.value;
+      for (let j = 1; j <= 5; j++) {
+        const currentStar = document.getElementById(`star-${j}`);
+        if (j <= currentValue/2) {
+          currentStar.className = 'text-2xl text-yellow-400';
+        } else {
+          currentStar.className = 'text-2xl text-gray-400';
+        }
+      }
+    });
+    
+    starWrapper.appendChild(star);
+    starsContainer.appendChild(starWrapper);
   }
 
-// Fonction d'initialisation principale
+  ratingGroup.appendChild(starsContainer);
+  form.appendChild(ratingGroup);
+  
+  // Submit button
+  const submitButton = document.createElement('button');
+  submitButton.type = 'submit';
+  submitButton.className = 'bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded';
+  submitButton.textContent = 'Publish my review';
+  form.appendChild(submitButton);
+  
+  // Event listener for form
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = nameInput.value.trim();
+    const content = contentTextarea.value.trim();
+    const rating = parseFloat(ratingInput.value);
+    
+    if (rating === 0) {
+      alert('Please give a rating by clicking on the stars.');
+      return;
+    }
+    
+    saveReview(mediaId, mediaType, username, content, rating);
+    
+    // Reset form
+    form.reset();
+    
+    // Refresh page to show new review
+    location.reload();
+  });
+  
+  container.appendChild(form);
+  main.appendChild(container);
+}
+
+// Function to save a review in localStorage
+function saveReview(mediaId, mediaType, username, content, rating) {
+  // Create a unique key for this media (movie or series)
+  const storageKey = `reviews_${mediaType}_${mediaId}`;
+  
+  // Get existing reviews or initialize empty array
+  let reviews = JSON.parse(localStorage.getItem(storageKey) || '[]');
+  
+  // Create new review with timestamp
+  const newReview = {
+    author: username,
+    content: content,
+    rating: rating,
+    created_at: new Date().toISOString()
+  };
+  
+  // Add review to array
+  reviews.push(newReview);
+  
+  // Save to localStorage
+  localStorage.setItem(storageKey, JSON.stringify(reviews));
+  
+  // Show confirmation message
+  alert('Your review has been published!');
+}
+
+// Function to get user reviews from localStorage
+function getUserReviews(mediaId, mediaType) {
+  const storageKey = `reviews_${mediaType}_${mediaId}`;
+  return JSON.parse(localStorage.getItem(storageKey) || '[]');
+}
+
+// Function to delete a review
+function deleteReview(mediaId, mediaType, reviewIndex) {
+  const storageKey = `reviews_${mediaType}_${mediaId}`;
+  
+  // Get existing reviews
+  let reviews = JSON.parse(localStorage.getItem(storageKey) || '[]');
+  
+  // Check that index is valid
+  if (reviewIndex >= 0 && reviewIndex < reviews.length) {
+    // Delete review at specified index
+    reviews.splice(reviewIndex, 1);
+    
+    // Update localStorage
+    localStorage.setItem(storageKey, JSON.stringify(reviews));
+    
+    return true;
+  }
+  
+  return false;
+}
+
+// Main initialization function
 async function init() {
   const currentPage = window.location.pathname;
-  console.log('Main.js chargé. Page actuelle:', currentPage);
+  console.log('Main.js loaded. Current page:', currentPage);
 
   if (currentPage.includes('movies.html')) {
-    console.log('Page Films détectée, chargement des films...');
-    loadContent('movie', 1); //  On utilise la version avec pagination
-    initSearch(); // Initialiser la recherche
+    console.log('Movies page detected, loading movies...');
+    loadContent('movie', 1); // Use version with pagination
+    initSearch(); // Initialize search
     fetchAutocompleteResults(query)
   }
-  // ----- Page SERIES -----
+  // ----- SERIES PAGE -----
   else if (currentPage.includes('series.html')) {
-    console.log('Page Séries détectée, chargement des séries...');
-    loadContent('series', 1); // Idem pour les séries
-    initSearch(); // Initialiser la recherche
+    console.log('Series page detected, loading series...');
+    loadContent('series', 1); // Same for series
+    initSearch(); // Initialize search
     fetchAutocompleteResults(query)
   
   }
   
-  // ----- Page DETAILS -----
+  // ----- DETAILS PAGE -----
   else if (currentPage.includes('details.html')) {
-    console.log('Page Détails détectée');
-    initSearch(); // Initialiser la recherche
+    console.log('Details page detected');
+    initSearch(); // Initialize search
   
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
@@ -116,7 +477,7 @@ async function init() {
         const reviews = await fetchMovieReviews(id);
         renderReviews(reviews);
       } catch (error) {
-        console.error('Erreur lors du chargement des détails du film :', error);
+        console.error('Error loading movie details:', error);
       }
     }
   
@@ -127,19 +488,19 @@ async function init() {
         const reviews = await fetchTvReviews(id);
         renderReviews(reviews);
       } catch (error) {
-        console.error('Erreur lors du chargement des détails de la série :', error);
+        console.error('Error loading series details:', error);
       }
     }
   }
   
-  // ----- Page FAVORIS (à compléter) -----
+  // ----- FAVORITES PAGE (to complete) -----
   else if (currentPage.includes('favorites.html')) {
-    console.log('Page Favoris chargée');
-    initSearch(); // Initialiser la recherche
-    // Ajouter la logique favoris ici
+    console.log('Favorites page loaded');
+    initSearch(); // Initialize search
+    // Add favorites logic here
   }
   
-  // ----- Menu mobile -----
+  // ----- Mobile menu -----
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
   const overlay = document.getElementById('overlay');
@@ -152,14 +513,11 @@ async function init() {
   overlay?.addEventListener('click', toggleMenu);
 }
 
-//  Attendre que le DOM soit prêt pour initialiser l'app
+// Wait for DOM to be ready to initialize app
 document.addEventListener('DOMContentLoaded', init);
 
 
-
-
-
-// ----- Fonction d'affichage commune (films + séries) -----
+// ----- Common display function (movies + series) -----
 function renderDetails(media) {
   const main = document.getElementById('main');
   if (!main) return;
@@ -168,36 +526,36 @@ function renderDetails(media) {
   container.className = 'max-w-4xl mx-auto mt-10 bg-gray-800 rounded-xl p-6 text-white shadow-lg';
   container.style.position = 'relative';
 
-  // Création d'un conteneur flex pour le titre et l'étoile
+  // Create flex container for title and star
   const headerContainer = document.createElement('div');
   headerContainer.className = 'flex justify-between items-center mb-4';
   
   const title = document.createElement('h2');
   title.className = 'text-3xl font-bold';
-  title.textContent = media.titre;
+  title.textContent = media.title; // Changed from titre to title
   headerContainer.appendChild(title);
 
-  // Conteneur pour les deux états de l'étoile (normal et favori)
+  // Container for both star states (normal and favorite)
   const starContainer = document.createElement('div');
   starContainer.className = 'relative w-6 h-6';
   
-  // Étoile normale (contour blanc)
+  // Normal star (white outline)
   const starNormal = document.createElement('img');
   starNormal.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
-  starNormal.alt = 'Étoile';
+  starNormal.alt = 'Star';
   starNormal.className = 'w-6 h-6 absolute top-0 left-0';
   starNormal.style.filter = 'invert(1)';
-  starNormal.style.display = 'block'; // Cachée par défaut
+  starNormal.style.display = 'block'; // Hidden by default
   starNormal.dataset.state = 'normal';
   starContainer.appendChild(starNormal);
   
-  // Étoile jaune (pour l'état favori) - initialement cachée
+  // Yellow star (for favorite state) - initially hidden
   const starFavorite = document.createElement('img');
   starFavorite.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
-  starFavorite.alt = 'Étoile favorite';
+  starFavorite.alt = 'Favorite star';
   starFavorite.className = 'w-6 h-6 absolute top-0 left-0';
   starFavorite.style.filter = 'invert(0.9) sepia(1) saturate(10) hue-rotate(0deg) brightness(1.2)';
-  starFavorite.style.display = 'none'; // Cachée par défaut
+  starFavorite.style.display = 'none'; // Hidden by default
   starFavorite.dataset.state = 'favorite';
   starContainer.appendChild(starFavorite);
   
@@ -208,8 +566,8 @@ function renderDetails(media) {
   contentWrapper.className = 'flex flex-col md:flex-row gap-6';
 
   const poster = document.createElement('img');
-  poster.src = media.affiche;
-  poster.alt = `Affiche de ${media.titre}`;
+  poster.src = media.poster; // Changed from affiche to poster
+  poster.alt = `Poster of ${media.title}`; // Changed from titre to title
   poster.className = 'rounded-lg w-full md:w-1/3';
   contentWrapper.appendChild(poster);
 
@@ -218,54 +576,54 @@ function renderDetails(media) {
 
   const date = document.createElement('p');
   date.className = 'text-sm text-gray-400';
-  date.textContent = `Date de sortie : ${media.date_sortie}`;
+  date.textContent = `Release date: ${media.release_date}`; // Changed from date_sortie to release_date
   details.appendChild(date);
 
   const note = document.createElement('p');
   note.className = 'text-sm text-yellow-400';
-  note.textContent = `Note moyenne : ${media.note}/10`;
+  note.textContent = `Average rating: ${media.rating}/10`; // Changed from note to rating
   details.appendChild(note);
 
   const genres = document.createElement('p');
   genres.className = 'text-sm text-gray-300 mb-4';
-  genres.textContent = `Genres : ${media.genres.join(', ')}`;
+  genres.textContent = `Genres: ${media.genres.join(', ')}`;
   details.appendChild(genres);
 
   const overview = document.createElement('p');
   overview.className = 'mb-4';
-  overview.textContent = media.resume;
+  overview.textContent = media.overview; // Changed from resume to overview
   details.appendChild(overview);
 
   const actorsTitle = document.createElement('h3');
   actorsTitle.className = 'text-xl font-semibold mt-4 mb-2';
-  actorsTitle.textContent = 'Acteurs principaux :';
+  actorsTitle.textContent = 'Main actors:';
   details.appendChild(actorsTitle);
 
   const actorList = document.createElement('div');
   actorList.className = 'grid grid-cols-2 gap-4';
 
-  media.acteurs.forEach(acteur => {
+  media.actors.forEach(actor => { // Changed from acteurs to actors
     const card = document.createElement('div');
     card.className = 'flex items-center gap-3';
 
-    if (acteur.photo) {
+    if (actor.photo) {
       const img = document.createElement('img');
-      img.src = acteur.photo;
-      img.alt = acteur.nom;
+      img.src = actor.photo;
+      img.alt = actor.name; // Changed from nom to name
       img.className = 'w-12 h-12 rounded-full object-cover';
       card.appendChild(img);
     }
 
     const infos = document.createElement('div');
-    const nom = document.createElement('p');
-    nom.className = 'font-semibold';
-    nom.textContent = acteur.nom;
+    const name = document.createElement('p'); // Changed from nom to name
+    name.className = 'font-semibold';
+    name.textContent = actor.name; // Changed from nom to name
 
     const role = document.createElement('p');
     role.className = 'text-sm text-gray-400';
-    role.textContent = `Rôle : ${acteur.personnage}`;
-
-    infos.appendChild(nom);
+    role.textContent = `Role: ${actor.character}`; // Changed from personnage to character
+    
+    infos.appendChild(name);
     infos.appendChild(role);
     card.appendChild(infos);
 
