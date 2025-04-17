@@ -44,12 +44,48 @@ export function createSeriesCard(serie) {
   date.textContent = serie.first_air_date ? new Date(serie.first_air_date).getFullYear() : '';
   date.className = 'text-gray-400 text-center text-sm';
 
+  
+
   if (serie.vote_average) {
     const rating = document.createElement('div');
     rating.className = 'absolute top-2 right-2 bg-black/80 text-white px-2 py-1 rounded-full text-sm';
     rating.textContent = serie.vote_average.toFixed(1);
     card.appendChild(rating);
   }
+
+  // Conteneur rond noir pour l'étoile, même style que le rating
+  const starContainer = document.createElement('div');
+  starContainer.className = 'absolute top-2 left-2 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center z-10 ring-1 ring-inset ring-yellow-600/50';
+
+  // Étoile normale (contour blanc)
+  const starNormal = document.createElement('img');
+  starNormal.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
+  starNormal.alt = 'Étoile';
+  starNormal.className = 'w-4 h-4';
+  starNormal.style.filter = 'invert(1)';
+  starNormal.style.display = 'block';
+  starNormal.dataset.state = 'normal';
+
+  // Étoile favorite (jaune) - masquée
+  const starFavorite = document.createElement('img');
+  starFavorite.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
+  starFavorite.alt = 'Étoile favorite';
+  starFavorite.className = 'w-5 h-5';
+  starFavorite.style.filter = 'invert(0.9) sepia(1) saturate(10) hue-rotate(0deg) brightness(1.2)';
+  starFavorite.style.display = 'none';
+  starFavorite.dataset.state = 'favorite';
+
+  starContainer.appendChild(starNormal);
+  starContainer.appendChild(starFavorite);
+
+  // Empêche la navigation quand on clique sur l'étoile
+  starContainer.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  card.appendChild(starContainer);
+
+
 
   card.appendChild(img);
   card.appendChild(title);
