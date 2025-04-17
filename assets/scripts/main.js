@@ -41,6 +41,44 @@ async function loadContent(type, page) {
   }
 }
 
+  function renderReviews(reviews) {
+    const main = document.getElementById('main');
+    if (!main || !Array.isArray(reviews)) return;
+  
+    const container = document.createElement('div');
+    container.className = 'max-w-4xl mx-auto mt-6 bg-gray-900 rounded-xl p-6 text-white shadow-md';
+  
+    const title = document.createElement('h3');
+    title.className = 'text-2xl font-bold mb-4';
+    title.textContent = 'Critiques des utilisateurs';
+    container.appendChild(title);
+  
+    if (reviews.length === 0) {
+      const noReview = document.createElement('p');
+      noReview.className = 'text-gray-400';
+      noReview.textContent = 'Aucune critique disponible.';
+      container.appendChild(noReview);
+    } else {
+      reviews.forEach(review => {
+        const reviewBlock = document.createElement('div');
+        reviewBlock.className = 'mb-4 border-b border-gray-700 pb-4';
+  
+        const author = document.createElement('p');
+        author.className = 'text-sm font-semibold text-yellow-300';
+        author.textContent = `Auteur : ${review.author}`;
+        reviewBlock.appendChild(author);
+  
+        const content = document.createElement('p');
+        content.className = 'text-sm mt-2';
+        content.textContent = review.content;
+        reviewBlock.appendChild(content);
+  
+        container.appendChild(reviewBlock);
+      });
+    }
+  
+    main.appendChild(container);
+  }
 
 // Fonction d'initialisation principale
 async function init() {
