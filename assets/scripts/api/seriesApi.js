@@ -22,32 +22,32 @@ export async function getPopularSeries(page = 1, limit = null) {
   }
 }
 
-export function createSeriesCard(serie) {
+export function createSeriesCard(series) {
   const card = document.createElement('div');
   card.className = 'movie-card relative w-48 mb-6 cursor-pointer transition-all duration-300 hover:scale-105';
 
   const img = document.createElement('img');
-  img.src = serie.poster_path ? `${IMAGE_BASE_URL}${serie.poster_path}` : '/assets/images/no-poster.jpg';
-  img.alt = serie.name;
+  img.src = series.poster_path ? `${IMAGE_BASE_URL}${series.poster_path}` : '/assets/images/no-poster.jpg';
+  img.alt = series.name;
   img.className = 'w-full rounded-lg shadow-lg';
-  img.dataset.seriesId = serie.id;
+  img.dataset.seriesId = series.id;
 
   card.addEventListener('click', () => {
-    window.location.href = `details.html?id=${serie.id}&type=tv`;
+    window.location.href = `details.html?id=${series.id}&type=tv`;
   });
 
   const title = document.createElement('p');
-  title.textContent = serie.name;
+  title.textContent = series.name;
   title.className = 'text-white text-center mt-2 font-medium';
 
   const date = document.createElement('p');
-  date.textContent = serie.first_air_date ? new Date(serie.first_air_date).getFullYear() : '';
+  date.textContent = series.first_air_date ? new Date(series.first_air_date).getFullYear() : '';
   date.className = 'text-gray-400 text-center text-sm';
 
-  if (serie.vote_average) {
+  if (series.vote_average) {
     const rating = document.createElement('div');
     rating.className = 'absolute top-2 right-2 bg-black/80 text-white px-2 py-1 rounded-full text-sm';
-    rating.textContent = serie.vote_average.toFixed(1);
+    rating.textContent = series.vote_average.toFixed(1);
     card.appendChild(rating);
   }
 
@@ -87,7 +87,7 @@ export async function initializeSeriesPage() {
     }
 
     initialSeries.forEach(serie => {
-      const card = createSeriesCard(serie);
+      const card = createSeriesCard(series);
       container.appendChild(card);
     });
 
