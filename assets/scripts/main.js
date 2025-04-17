@@ -5,6 +5,7 @@ import { createPagination } from './components/pagination.js';
 import { initSearch } from './components/search.js';
 import { fetchAutocompleteResults } from './components/search.js';
 import { fetchSeriesDetails, fetchMovieDetails } from './api/detailsApi.js';
+import { fetchMovieReviews, fetchTvReviews } from './api/reviewApi.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
@@ -40,6 +41,7 @@ async function loadContent(type, page) {
   }
 }
 
+
 // Fonction d'initialisation principale
 async function init() {
   const currentPage = window.location.pathname;
@@ -73,6 +75,8 @@ async function init() {
       try {
         const movie = await fetchMovieDetails(id);
         renderDetails(movie);
+        const reviews = await fetchMovieReviews(id);
+        renderReviews(reviews);
       } catch (error) {
         console.error('Erreur lors du chargement des détails du film :', error);
       }
@@ -82,6 +86,8 @@ async function init() {
       try {
         const serie = await fetchSeriesDetails(id);
         renderDetails(serie);
+        const reviews = await fetchTvReviews(id);
+        renderReviews(reviews);
       } catch (error) {
         console.error('Erreur lors du chargement des détails de la série :', error);
       }
