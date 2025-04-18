@@ -56,7 +56,7 @@ export function createSeriesCard(series) {
   const starButton = document.createElement('button');
   starButton.type = 'button';
   starButton.className = 'star-container absolute top-2 left-2 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center z-10 ring-1 ring-inset ring-yellow-600/50 focus:outline-none';
-  starButton.dataset.id = serie.id;    // Les attributs data sont maintenant sur le bouton
+  starButton.dataset.id = series.id;    // Les attributs data sont maintenant sur le bouton
   starButton.dataset.type = 'tv';      // Les attributs data sont maintenant sur le bouton
   starButton.setAttribute('aria-label', 'Ajouter ou retirer des favoris');
 

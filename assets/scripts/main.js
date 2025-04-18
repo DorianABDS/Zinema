@@ -605,7 +605,6 @@ function renderDetails(media) {
   starFavorite.dataset.state = 'favorite';
   starContainer.appendChild(starFavorite);
   
-  headerContainer.appendChild(starContainer);
   container.appendChild(headerContainer);
 
   const contentWrapper = document.createElement('div');
