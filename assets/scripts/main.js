@@ -7,6 +7,7 @@ import { fetchAutocompleteResults } from './components/search.js';
 import { fetchSeriesDetails, fetchMovieDetails } from './api/detailsApi.js';
 import { fetchMovieReviews, fetchTvReviews } from './api/reviewApi.js';
 import { initializeFavoritesPage } from './components/displayFavourite.js';
+import { initializeFavoriteButtons, syncFavorites, checkCurrentFavorite, updateStarUI, toggleFavorite } from './components/favourite.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
@@ -29,6 +30,7 @@ async function loadContent(type, page) {
     main.innerHTML = '';
     main.appendChild(container);  
     main.appendChild(paginationContainer);
+    syncFavorites(); 
 
     createPagination({
       container: paginationContainer,
@@ -448,46 +450,53 @@ async function init() {
   console.log('Main.js loaded. Current page:', currentPage);
 
   if (currentPage.includes('movies.html')) {
-    console.log('Movies page detected, loading movies...');
-    loadContent('movie', 1); // Use version with pagination
-    initSearch(); // Initialize search
-    fetchAutocompleteResults(query)
+    console.log('Page Films détectée, chargement des films...');
+    loadContent('movie', 1);
+    initSearch();
+    fetchAutocompleteResults(query);
+    initializeFavoriteButtons();
   }
   // ----- SERIES PAGE -----
   else if (currentPage.includes('series.html')) {
-    console.log('Series page detected, loading series...');
-    loadContent('series', 1); // Same for series
-    initSearch(); // Initialize search
-    fetchAutocompleteResults(query)
-  
+    console.log('Page Séries détectée, chargement des séries...');
+    loadContent('series', 1);
+    initSearch();
+    fetchAutocompleteResults(query);
+    initializeFavoriteButtons();
   }
   
   // ----- DETAILS PAGE -----
   else if (currentPage.includes('details.html')) {
-    console.log('Details page detected');
-    initSearch(); // Initialize search
-  
+    console.log('Page Détails détectée');
+    initSearch();
+    initializeFavoriteButtons();
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     const type = urlParams.get('type');
-  
     if (id && type === 'movie') {
       try {
         const movie = await fetchMovieDetails(id);
+        // Assurez-vous que l'objet movie a les propriétés id et type
+        movie.id = id; // Forcer l'ID
+        movie.type = 'movie'; // Forcer le type
         renderDetails(movie);
         const reviews = await fetchMovieReviews(id);
         renderReviews(reviews);
+        syncFavorites();
       } catch (error) {
         console.error('Error loading movie details:', error);
       }
     }
-  
     else if (id && type === 'tv') {
       try {
         const serie = await fetchSeriesDetails(id);
+        // Assurez-vous que l'objet serie a les propriétés id et type
+        serie.id = id; // Forcer l'ID
+        serie.type = 'tv'; // Forcer le type
         renderDetails(serie);
         const reviews = await fetchTvReviews(id);
         renderReviews(reviews);
+        syncFavorites();
       } catch (error) {
         console.error('Error loading series details:', error);
       }
@@ -496,16 +505,15 @@ async function init() {
   
   // ----- FAVORITES PAGE (to complete) -----
   else if (currentPage.includes('favorites.html')) {
-    console.log('Favorites page loaded');
-    initSearch(); // Initialize search
-    // Add favorites logic here
+    console.log('Page Favoris chargée');
+    initSearch();
+    initializeFavoriteButtons();
   }
   
   // ----- Mobile menu -----
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
   const overlay = document.getElementById('overlay');
-  
   function toggleMenu() {
     mobileMenu?.classList.toggle('translate-x-full');
     overlay?.classList.toggle('hidden');
@@ -530,12 +538,49 @@ function renderDetails(media) {
   // Create flex container for title and star
   const headerContainer = document.createElement('div');
   headerContainer.className = 'flex justify-between items-center mb-4';
-  
   const title = document.createElement('h2');
   title.className = 'text-3xl font-bold';
   title.textContent = media.title; // Changed from titre to title
   headerContainer.appendChild(title);
 
+  const starButton = document.createElement('button');
+  starButton.type = 'button';
+  starButton.id = 'detailStarContainer';
+  starButton.className = 'star-container relative w-6 h-6 focus:outline-none';
+  starButton.setAttribute('aria-label', 'Ajouter ou retirer des favoris');
+  starButton.dataset.id = String(media.id);  
+  starButton.dataset.type = media.type; 
+
+  const starEmpty = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  starEmpty.setAttribute('viewBox', '0 0 24 24');
+  starEmpty.setAttribute('fill', 'none');
+  starEmpty.setAttribute('stroke', 'white');
+  starEmpty.setAttribute('stroke-width', '2');
+  starEmpty.setAttribute('class', 'w-6 h-6 absolute top-0 left-0 pointer-events-none');
+  starEmpty.dataset.state = 'normal';
+  starEmpty.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>`;
+
+  const starFull = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  starFull.setAttribute('viewBox', '0 0 24 24');
+  starFull.setAttribute('fill', '#FFD600');
+  starFull.setAttribute('class', 'w-6 h-6 absolute top-0 left-0 pointer-events-none');
+  starFull.style.display = 'none';
+  starFull.dataset.state = 'favorite';
+  starFull.innerHTML = `<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>`;
+  
+  starButton.appendChild(starEmpty);
+  starButton.appendChild(starFull);
+
+
+  starButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const id = starButton.dataset.id;
+    const type = starButton.dataset.type;
+    const isFavorite = toggleFavorite(id, type);
+    updateStarUI(starButton, isFavorite);
+  });
+  headerContainer.appendChild(starButton);
   // Container for both star states (normal and favorite)
   const starContainer = document.createElement('div');
   starContainer.className = 'relative w-6 h-6';
@@ -640,11 +685,12 @@ function renderDetails(media) {
 
   details.appendChild(actorList);
   contentWrapper.appendChild(details);
+  container.appendChild(headerContainer);
   container.appendChild(contentWrapper);
   main.appendChild(container);
 }
 
-// Dans le main.js existant
+// ----- Pages spécifiques -----
 if (window.location.pathname.includes('favorites.html')) {
   initializeFavoritesPage();
 } else if (window.location.pathname.includes('movies.html')) {

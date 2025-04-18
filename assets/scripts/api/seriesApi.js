@@ -2,6 +2,7 @@
 const API_KEY = '810f7bae435ef7e7f5d46a2c4deb733e';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+import { toggleFavorite, updateStarUI } from '../components/favourite.js';
 
 let currentPage = 1;
 
@@ -44,8 +45,6 @@ export function createSeriesCard(series) {
   date.textContent = series.first_air_date ? new Date(series.first_air_date).getFullYear() : '';
   date.className = 'text-gray-400 text-center text-sm';
 
-  
-
   if (series.vote_average) {
     const rating = document.createElement('div');
     rating.className = 'absolute top-2 right-2 bg-black/80 text-white px-2 py-1 rounded-full text-sm';
@@ -53,39 +52,45 @@ export function createSeriesCard(series) {
     card.appendChild(rating);
   }
 
-  // Conteneur rond noir pour l'étoile, même style que le rating
-  const starContainer = document.createElement('div');
-  starContainer.className = 'absolute top-2 left-2 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center z-10 ring-1 ring-inset ring-yellow-600/50';
+  // Crée le bouton étoile - CORRIGÉ
+  const starButton = document.createElement('button');
+  starButton.type = 'button';
+  starButton.className = 'star-container absolute top-2 left-2 bg-black/60 rounded-full w-7 h-7 flex items-center justify-center z-10 ring-1 ring-inset ring-yellow-600/50 focus:outline-none';
+  starButton.dataset.id = serie.id;    // Les attributs data sont maintenant sur le bouton
+  starButton.dataset.type = 'tv';      // Les attributs data sont maintenant sur le bouton
+  starButton.setAttribute('aria-label', 'Ajouter ou retirer des favoris');
 
-  // Étoile normale (contour blanc)
-  const starNormal = document.createElement('img');
-  starNormal.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
-  starNormal.alt = 'Étoile';
-  starNormal.className = 'w-4 h-4';
-  starNormal.style.filter = 'invert(1)';
-  starNormal.style.display = 'block';
-  starNormal.dataset.state = 'normal';
+  // SVG étoile vide (blanche)
+  const starEmpty = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  starEmpty.setAttribute('viewBox', '0 0 24 24');
+  starEmpty.setAttribute('fill', 'none');
+  starEmpty.setAttribute('stroke', 'white');
+  starEmpty.setAttribute('stroke-width', '2');
+  starEmpty.setAttribute('class', 'w-4 h-4 absolute pointer-events-none');
+  starEmpty.dataset.state = 'normal';
+  starEmpty.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>`;
 
-  // Étoile favorite (jaune) - masquée
-  const starFavorite = document.createElement('img');
-  starFavorite.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
-  starFavorite.alt = 'Étoile favorite';
-  starFavorite.className = 'w-5 h-5';
-  starFavorite.style.filter = 'invert(0.9) sepia(1) saturate(10) hue-rotate(0deg) brightness(1.2)';
-  starFavorite.style.display = 'none';
-  starFavorite.dataset.state = 'favorite';
+  // SVG étoile pleine (jaune)
+  const starFull = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  starFull.setAttribute('viewBox', '0 0 24 24');
+  starFull.setAttribute('fill', '#FFD600');
+  starFull.setAttribute('class', 'w-4 h-4 absolute pointer-events-none');
+  starFull.style.display = 'none';
+  starFull.dataset.state = 'favorite';
+  starFull.innerHTML = `<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>`;
 
-  starContainer.appendChild(starNormal);
-  starContainer.appendChild(starFavorite);
+  starButton.appendChild(starEmpty);
+  starButton.appendChild(starFull);
 
-  // Empêche la navigation quand on clique sur l'étoile
-  starContainer.addEventListener('click', (e) => {
+  starButton.addEventListener('click', (e) => {
     e.stopPropagation();
+    const id = starButton.dataset.id;
+    const type = starButton.dataset.type;
+    const isFavorite = toggleFavorite(id, type);
+    updateStarUI(starButton, isFavorite);
   });
 
-  card.appendChild(starContainer);
-
-
+  card.appendChild(starButton);
 
   card.appendChild(img);
   card.appendChild(title);
