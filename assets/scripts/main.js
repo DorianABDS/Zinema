@@ -8,6 +8,9 @@ import { fetchSeriesDetails, fetchMovieDetails } from './api/detailsApi.js';
 import { fetchMovieReviews, fetchTvReviews } from './api/reviewApi.js';
 import { initializeFavoritesPage } from './components/displayFavourite.js';
 import { initializeFavoriteButtons, syncFavorites, checkCurrentFavorite, updateStarUI, toggleFavorite } from './components/favourite.js';
+import { initCarouselMovies } from './carousels/moviesCarousel.js';
+import { initCarouselSeries } from './carousels/seriesCarousel.js';
+import { renderHeroSection } from './components/hero.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
@@ -444,11 +447,11 @@ function deleteReview(mediaId, mediaType, reviewIndex) {
   return false;
 }
 
-// Main initialization function
 async function init() {
   const currentPage = window.location.pathname;
   console.log('Main.js loaded. Current page:', currentPage);
 
+  // ----- MOVIES PAGE -----
   if (currentPage.includes('movies.html')) {
     console.log('Page Films détectée, chargement des films...');
     loadContent('movie', 1);
@@ -456,6 +459,7 @@ async function init() {
     fetchAutocompleteResults(query);
     initializeFavoriteButtons();
   }
+
   // ----- SERIES PAGE -----
   else if (currentPage.includes('series.html')) {
     console.log('Page Séries détectée, chargement des séries...');
@@ -464,7 +468,7 @@ async function init() {
     fetchAutocompleteResults(query);
     initializeFavoriteButtons();
   }
-  
+
   // ----- DETAILS PAGE -----
   else if (currentPage.includes('details.html')) {
     console.log('Page Détails détectée');
@@ -473,8 +477,9 @@ async function init() {
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     const type = urlParams.get('type');
-    if (id && type === 'movie') {
-      try {
+
+    try {
+      if (id && type === 'movie') {
         const movie = await fetchMovieDetails(id);
         // Assurez-vous que l'objet movie a les propriétés id et type
         movie.id = id; // Forcer l'ID
@@ -500,11 +505,33 @@ async function init() {
       } catch (error) {
         console.error('Error loading series details:', error);
       }
+    } catch (error) {
+      console.error('Error loading details:', error);
     }
   }
-  
-  // ----- FAVORITES PAGE (to complete) -----
+
+  // ----- FAVORITES PAGE -----
   else if (currentPage.includes('favorites.html')) {
+    console.log('Favorites page loaded');
+    initSearch();
+    // Logic favoris à ajouter ici
+  }
+
+  // ----- HOME PAGE (index.html) -----
+  else if (currentPage.includes('index.html') || currentPage === '/' || currentPage === '/index.html') {
+    console.log('Home page loaded');
+    initSearch();
+
+    try {
+      await renderHeroSection();
+      await initCarouselMovies();
+      await initCarouselSeries();
+    } catch (error) {
+      console.error('Erreur lors du chargement des carousels :', error);
+    }
+  }
+
+  // ----- MOBILE MENU -----
     console.log('Page Favoris chargée');
     initSearch();
     initializeFavoriteButtons();
@@ -514,16 +541,19 @@ async function init() {
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
   const overlay = document.getElementById('overlay');
+
   function toggleMenu() {
     mobileMenu?.classList.toggle('translate-x-full');
     overlay?.classList.toggle('hidden');
   }
+
   burger?.addEventListener('click', toggleMenu);
   overlay?.addEventListener('click', toggleMenu);
 }
 
-// Wait for DOM to be ready to initialize app
 document.addEventListener('DOMContentLoaded', init);
+
+
 
 
 // ----- Common display function (movies + series) -----
