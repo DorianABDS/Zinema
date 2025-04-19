@@ -27,9 +27,14 @@ export async function renderHeroSection() {
   subtitle.textContent = 'Découvrez les meilleurs films et séries en un clic';
 
   const button = document.createElement('a');
-  button.href = 'movies.html';
+  button.href = '/pages/movies.html';
   button.className = 'inline-block bg-yellow-600 hover:bg-yellow-700 text-black font-semibold py-3 px-6 rounded-lg transition';  // texte en noir
   button.textContent = 'Explorer le catalogue';
+
+  // Ajouter un écouteur d'événements pour tester la redirection
+  button.addEventListener('click', (e) => {
+    console.log('Redirection vers movies.html');
+  });
 
   content.appendChild(title);
   content.appendChild(subtitle);
