@@ -6,6 +6,9 @@ import { initSearch } from './components/search.js';
 import { fetchAutocompleteResults } from './components/search.js';
 import { fetchSeriesDetails, fetchMovieDetails } from './api/detailsApi.js';
 import { fetchMovieReviews, fetchTvReviews } from './api/reviewApi.js';
+import { initCarouselMovies } from './carousels/moviesCarousel.js';
+import { initCarouselSeries } from './carousels/seriesCarousel.js';
+import { renderHeroSection } from './components/hero.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
@@ -441,80 +444,90 @@ function deleteReview(mediaId, mediaType, reviewIndex) {
   return false;
 }
 
-// Main initialization function
 async function init() {
   const currentPage = window.location.pathname;
   console.log('Main.js loaded. Current page:', currentPage);
 
+  // ----- MOVIES PAGE -----
   if (currentPage.includes('movies.html')) {
     console.log('Movies page detected, loading movies...');
-    loadContent('movie', 1); // Use version with pagination
-    initSearch(); // Initialize search
-    fetchAutocompleteResults(query)
+    loadContent('movie', 1); // pagination
+    initSearch();
+    fetchAutocompleteResults(query); // <- Assure-toi que "query" existe ici !
   }
+
   // ----- SERIES PAGE -----
   else if (currentPage.includes('series.html')) {
     console.log('Series page detected, loading series...');
-    loadContent('series', 1); // Same for series
-    initSearch(); // Initialize search
-    fetchAutocompleteResults(query)
-  
+    loadContent('series', 1);
+    initSearch();
+    fetchAutocompleteResults(query); // <- idem
   }
-  
+
   // ----- DETAILS PAGE -----
   else if (currentPage.includes('details.html')) {
     console.log('Details page detected');
-    initSearch(); // Initialize search
-  
+    initSearch();
+
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     const type = urlParams.get('type');
-  
-    if (id && type === 'movie') {
-      try {
+
+    try {
+      if (id && type === 'movie') {
         const movie = await fetchMovieDetails(id);
         renderDetails(movie);
         const reviews = await fetchMovieReviews(id);
         renderReviews(reviews);
-      } catch (error) {
-        console.error('Error loading movie details:', error);
-      }
-    }
-  
-    else if (id && type === 'tv') {
-      try {
+      } else if (id && type === 'tv') {
         const serie = await fetchSeriesDetails(id);
         renderDetails(serie);
         const reviews = await fetchTvReviews(id);
         renderReviews(reviews);
-      } catch (error) {
-        console.error('Error loading series details:', error);
       }
+    } catch (error) {
+      console.error('Error loading details:', error);
     }
   }
-  
-  // ----- FAVORITES PAGE (to complete) -----
+
+  // ----- FAVORITES PAGE -----
   else if (currentPage.includes('favorites.html')) {
     console.log('Favorites page loaded');
-    initSearch(); // Initialize search
-    // Add favorites logic here
+    initSearch();
+    // Logic favoris à ajouter ici
   }
-  
-  // ----- Mobile menu -----
+
+  // ----- HOME PAGE (index.html) -----
+  else if (currentPage.includes('index.html') || currentPage === '/' || currentPage === '/index.html') {
+    console.log('Home page loaded');
+    initSearch();
+
+    try {
+      await renderHeroSection();
+      await initCarouselMovies();
+      await initCarouselSeries();
+    } catch (error) {
+      console.error('Erreur lors du chargement des carousels :', error);
+    }
+  }
+
+  // ----- MOBILE MENU -----
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
   const overlay = document.getElementById('overlay');
-  
+
   function toggleMenu() {
     mobileMenu?.classList.toggle('translate-x-full');
     overlay?.classList.toggle('hidden');
   }
+
   burger?.addEventListener('click', toggleMenu);
   overlay?.addEventListener('click', toggleMenu);
 }
 
-// Wait for DOM to be ready to initialize app
 document.addEventListener('DOMContentLoaded', init);
+
+
 
 
 // ----- Common display function (movies + series) -----
