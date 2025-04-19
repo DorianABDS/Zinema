@@ -1,4 +1,4 @@
-import { getPopularMovies } from '../api/moviesApi.js';
+import { getPopularMovies } from '../api/moviesApi.js'; 
 
 let currentIndex = 0;
 let intervalId;
@@ -28,7 +28,7 @@ export async function renderHeroSection() {
 
   const button = document.createElement('a');
   button.href = 'movies.html';
-  button.className = 'inline-block bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition';
+  button.className = 'inline-block bg-yellow-600 hover:bg-yellow-700 text-black font-semibold py-3 px-6 rounded-lg transition';  // texte en noir
   button.textContent = 'Explorer le catalogue';
 
   content.appendChild(title);
