@@ -1,4 +1,4 @@
-
+console.log("✅ FICHIER search.js CHARGÉ");
 // Récupération du champ de recherche dans le DOM
 let searchInput = document.getElementById('search_input');
 
@@ -28,15 +28,17 @@ function displayResults(results) {
     const resultItem = document.createElement('div');
     resultItem.classList.add('result-item', 'p-2', 'hover:bg-gray-700', 'cursor-pointer', 'text-white');
 
-    const type = result.title ? 'movie' : 'tv'; // Détection du type via la présence de `title`
     const title = result.title || result.name; // Titre à afficher
 
     resultItem.textContent = title;
 
-    // Redirection vers la page de détails au clic
     resultItem.addEventListener('click', () => {
-      window.location.href = `details.html?id=${result.id}&type=${type}`;
+      const type = result.title ? 'movie' : 'tv';
+      const link = `/pages/details.html?id=${result.id}&type=${type}`;
+      console.log('🔗 Redirection vers :', link);
+      window.location.href = link;
     });
+    
 
     resultsContainer.appendChild(resultItem);
   });
