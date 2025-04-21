@@ -20,7 +20,7 @@ export async function renderHeroSection() {
 
   const title = document.createElement('h1');
   title.className = 'text-4xl md:text-6xl font-bold mb-4';
-  title.textContent = 'Bienvenue sur Zynema';
+  title.textContent = 'Bienvenue sur Zinema';
 
   const subtitle = document.createElement('p');
   subtitle.className = 'text-lg md:text-xl mb-6';
