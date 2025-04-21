@@ -1,97 +1,105 @@
-export function createCarousel({ containerId, items, getTitle, getImage }) {
-    // Création de la structure principale du carousel
+export function createCarousel({ containerId, items, getTitle, getImage, carouselTitle = "Films populaires" }) {
+    // SECTION PRINCIPALE
     const section = document.createElement('section');
-    section.className = "carousel-section relative";
+    section.className = "carousel-section my-8 bg-gradient-to-b from-gray-900 via-black to-black/0 py-12 px-4 rounded-xl";
 
-    // Création du titre du carousel
+    // TITRE avec paramÃ¨tre personnalisable
     const heading = document.createElement('h2');
-    heading.textContent = "Films populaires";
-    heading.className = "text-2xl font-bold text-white mb-4 px-4";
+    heading.textContent = carouselTitle;
+    heading.className = "text-3xl font-bold text-white mb-6 px-6";
 
-    // Création du conteneur pour les éléments défilants
+    // CONTAINER GLOBAL AVEC FLECHES + CAROUSEL
+    const controlWrapper = document.createElement('div');
+    controlWrapper.className = "flex items-center space-x-4 px-6"; // plus de h-*
+
+    // FLECHE GAUCHE
+    const prevButton = document.createElement('button');
+    prevButton.innerHTML = '&#10094;';
+    prevButton.className = `
+        bg-black/60 text-white text-3xl font-bold 
+        w-12 rounded-lg flex items-center justify-center 
+        hover:bg-black/80 transition shadow-lg self-stretch
+    `;
+
+    // WRAPPER DU CAROUSEL
+    const carouselWrapper = document.createElement('div');
+    carouselWrapper.className = "relative overflow-hidden flex-1";
+
+    // CONTENEUR D'IMAGES
     const carouselContainer = document.createElement('div');
     carouselContainer.id = containerId;
-    carouselContainer.className = "flex overflow-hidden space-x-4 px-4";
+    carouselContainer.className = "flex transition-transform duration-500 ease-in-out space-x-6";
 
-    // Ajout des éléments (images) au carousel
+    // AJOUT DES ELEMENTS
     items.forEach((item) => {
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'flex-shrink-0 w-1/5';
+        itemDiv.className = 'flex-shrink-0 w-48 sm:w-56 md:w-64';
+
+        const imageWrapper = document.createElement('div');
+        imageWrapper.className = "relative overflow-hidden rounded-xl shadow-lg";
 
         const image = document.createElement('img');
         image.src = getImage(item);
         image.alt = getTitle(item);
-        image.className = "w-full h-72 object-cover rounded-lg shadow-lg hover:scale-105 transition";
+        image.className = "w-full object-contain"; // pas de h-full, garde taille naturelle
 
-        itemDiv.appendChild(image);
+        const titleOverlay = document.createElement('div');
+        titleOverlay.className = "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-sm px-3 py-2";
+        titleOverlay.textContent = getTitle(item);
+
+        imageWrapper.appendChild(image);
+        imageWrapper.appendChild(titleOverlay);
+        itemDiv.appendChild(imageWrapper);
         carouselContainer.appendChild(itemDiv);
     });
 
-    // Création des boutons de navigation
+    // FLECHE DROITE
     const nextButton = document.createElement('button');
-    nextButton.innerHTML = '&rarr;';  // Flèche droite
-    nextButton.className = 'absolute right-4 top-1/2 transform -translate-y-1/2 bg-red-600 text-white px-4 py-2 rounded-full z-10';
+    nextButton.innerHTML = '&#10095;';
+    nextButton.className = `
+        bg-black/60 text-white text-3xl font-bold 
+        w-12 rounded-lg flex items-center justify-center 
+        hover:bg-black/80 transition shadow-lg self-stretch
+    `;
 
-    const prevButton = document.createElement('button');
-    prevButton.innerHTML = '&larr;';  // Flèche gauche
-    prevButton.className = 'absolute left-4 top-1/2 transform -translate-y-1/2 bg-red-600 text-white px-4 py-2 rounded-full z-10';
-
-    // Assemblage des éléments du carousel
+    // ASSEMBLAGE
+    carouselWrapper.appendChild(carouselContainer);
+    controlWrapper.appendChild(prevButton);
+    controlWrapper.appendChild(carouselWrapper);
+    controlWrapper.appendChild(nextButton);
     section.appendChild(heading);
-    section.appendChild(carouselContainer);
-    section.appendChild(nextButton);
-    section.appendChild(prevButton);
+    section.appendChild(controlWrapper);
 
-    // Ajout du carousel à la page
     const main = document.querySelector('main') || document.body;
     main.appendChild(section);
 
-    // Variables de contrôle pour la navigation
+    // SCROLL LOGIC
     let currentIndex = 0;
     const totalItems = items.length;
 
-    // Fonction pour mettre à jour la position du carousel
     function updateCarousel() {
-        // Calcul des dimensions pour le défilement
-        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 16; // Largeur + marge
-        const visibleItems = Math.floor(carouselContainer.offsetWidth / itemWidth);
+        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 24;
         const offset = currentIndex * itemWidth;
-
-        // Journalisation pour le débogage
-        console.log('currentIndex:', currentIndex);
-        console.log('offset:', offset);
-        console.log('visibleItems:', visibleItems);
-
-        // Application du déplacement horizontal
         carouselContainer.style.transform = `translateX(-${offset}px)`;
-        carouselContainer.offsetHeight; // Force le rafraîchissement du rendu
     }
 
-    // Gestion du clic sur le bouton suivant
     nextButton.addEventListener('click', () => {
-        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 16;
-        const visibleItems = Math.floor(carouselContainer.offsetWidth / itemWidth);
-
-        // Avancer si possible
+        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 24;
+        const visibleItems = Math.floor(carouselWrapper.offsetWidth / itemWidth);
         if (currentIndex < totalItems - visibleItems) {
             currentIndex++;
             updateCarousel();
         }
     });
 
-    // Gestion du clic sur le bouton précédent
     prevButton.addEventListener('click', () => {
-        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 16;
-        const visibleItems = Math.floor(carouselContainer.offsetWidth / itemWidth);
-
-        // Reculer si possible
         if (currentIndex > 0) {
             currentIndex--;
             updateCarousel();
         }
     });
 
-    // Gestion des interactions tactiles (swipe)
+    // TOUCH SUPPORT
     let startX = 0;
     let isScrolling = false;
 
@@ -103,49 +111,35 @@ export function createCarousel({ containerId, items, getTitle, getImage }) {
     carouselContainer.addEventListener('touchmove', (e) => {
         if (!isScrolling) return;
         const moveX = e.touches[0].pageX;
-        
-        // Swipe vers la droite (précédent)
-        if (moveX - startX > 50) {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateCarousel();
-            }
-            isScrolling = false;
-        } 
-        // Swipe vers la gauche (suivant)
-        else if (startX - moveX > 50) {
-            const itemWidth = carouselContainer.querySelector('div').offsetWidth + 16;
-            const visibleItems = Math.floor(carouselContainer.offsetWidth / itemWidth);
+        const delta = moveX - startX;
+        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 24;
+        const visibleItems = Math.floor(carouselWrapper.offsetWidth / itemWidth);
 
-            if (currentIndex < totalItems - visibleItems) {
-                currentIndex++;
-                updateCarousel();
-            }
+        if (delta > 50 && currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
+            isScrolling = false;
+        } else if (delta < -50 && currentIndex < totalItems - visibleItems) {
+            currentIndex++;
+            updateCarousel();
             isScrolling = false;
         }
     });
 
-    // Gestion du défilement à la molette
+    // WHEEL SUPPORT
     carouselContainer.addEventListener('wheel', (e) => {
-        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 16;
-        const visibleItems = Math.floor(carouselContainer.offsetWidth / itemWidth);
+        e.preventDefault();
+        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 24;
+        const visibleItems = Math.floor(carouselWrapper.offsetWidth / itemWidth);
 
-        // Défilement vers le bas = avancer
-        if (e.deltaY > 0) {
-            if (currentIndex < totalItems - visibleItems) {
-                currentIndex++;
-                updateCarousel();
-            }
-        } 
-        // Défilement vers le haut = reculer
-        else {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateCarousel();
-            }
+        if (e.deltaY > 0 && currentIndex < totalItems - visibleItems) {
+            currentIndex++;
+            updateCarousel();
+        } else if (e.deltaY < 0 && currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
         }
     });
 
-    // Initialisation du carousel
     updateCarousel();
 }
