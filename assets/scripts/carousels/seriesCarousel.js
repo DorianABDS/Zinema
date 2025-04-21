@@ -21,5 +21,8 @@ export async function initCarouselSeries() {
     // Utilise une image par défaut si aucune affiche n'est disponible
     getImage: (serie) =>
       serie.poster_path ? `https://image.tmdb.org/t/p/w500${serie.poster_path}` : '/assets/images/no-poster.jpg',
+    
+    // Ajout du titre personnalisé pour le carrousel des séries
+    carouselTitle: "Séries populaires"
   });
 }

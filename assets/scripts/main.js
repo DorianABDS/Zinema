@@ -11,6 +11,7 @@ import { initializeFavoriteButtons, syncFavorites, checkCurrentFavorite, updateS
 import { initCarouselMovies } from './carousels/moviesCarousel.js';
 import { initCarouselSeries } from './carousels/seriesCarousel.js';
 import { renderHeroSection } from './components/hero.js';
+import { initCarouselRecommendations } from './carousels/recommendationCarousel.js';
 
 async function loadContent(type, page) {
   const main = document.getElementById('main');
@@ -485,11 +486,11 @@ async function init() {
     console.log('Page Détails détectée');
     initSearch();
     initializeFavoriteButtons();
-
+  
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     const type = urlParams.get('type');
-
+  
     try {
       if (id && type === 'movie') {
         const movie = await fetchMovieDetails(id);
@@ -498,6 +499,12 @@ async function init() {
         renderDetails(movie);
         const reviews = await fetchMovieReviews(id);
         renderReviews(reviews);
+        try { 
+          // Remplacer initCarouselMovies() par:
+          await initCarouselRecommendations(id, 'movie', movie.title);
+        } catch (error) {
+          console.error('Erreur lors du chargement des recommandations :', error);
+        }
         syncFavorites();
       } else if (id && type === 'tv') {
         const serie = await fetchSeriesDetails(id);
@@ -506,6 +513,12 @@ async function init() {
         renderDetails(serie);
         const reviews = await fetchTvReviews(id);
         renderReviews(reviews);
+        try {
+          // Remplacer initCarouselSeries() par:
+          await initCarouselRecommendations(id, 'tv', serie.title || serie.name);
+        } catch (error) {
+          console.error('Erreur lors du chargement des recommandations :', error);
+        }
         syncFavorites();
       }
     } catch (error) {
