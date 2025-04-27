@@ -570,6 +570,67 @@ function renderDetails(media) {
   const main = document.getElementById('main');
   if (!main) return;
 
+  // Ajoutons d'abord le CSS pour la modal si ce n'est pas déjà fait
+  if (!document.getElementById('trailerModalStyles')) {
+    const styleTag = document.createElement('style');
+    styleTag.id = 'trailerModalStyles';
+    styleTag.textContent = `
+      .trailer-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .trailer-modal.show {
+        display: flex;
+      }
+      
+      .modal-content {
+        position: relative;
+        width: 90%;
+        max-width: 800px;
+        background-color: #1a1a1a;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      
+      .close-modal {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 1001;
+      }
+      
+      .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 ratio */
+        height: 0;
+        overflow: hidden;
+      }
+      
+      .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+    `;
+    document.head.appendChild(styleTag);
+  }
+
   const container = document.createElement('div');
   container.className = 'max-w-4xl mx-auto mt-10 bg-gray-800 rounded-xl p-6 text-white shadow-lg';
   container.style.position = 'relative';
@@ -610,7 +671,6 @@ function renderDetails(media) {
   starButton.appendChild(starEmpty);
   starButton.appendChild(starFull);
 
-
   starButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -620,29 +680,6 @@ function renderDetails(media) {
     updateStarUI(starButton, isFavorite);
   });
   headerContainer.appendChild(starButton);
-  // Container for both star states (normal and favorite)
-  const starContainer = document.createElement('div');
-  starContainer.className = 'relative w-6 h-6';
-  
-  // Normal star (white outline)
-  const starNormal = document.createElement('img');
-  starNormal.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
-  starNormal.alt = 'Star';
-  starNormal.className = 'w-6 h-6 absolute top-0 left-0';
-  starNormal.style.filter = 'invert(1)';
-  starNormal.style.display = 'block'; // Hidden by default
-  starNormal.dataset.state = 'normal';
-  starContainer.appendChild(starNormal);
-  
-  // Yellow star (for favorite state) - initially hidden
-  const starFavorite = document.createElement('img');
-  starFavorite.src = 'https://cdn-icons-png.flaticon.com/512/13/13595.png';
-  starFavorite.alt = 'Favorite star';
-  starFavorite.className = 'w-6 h-6 absolute top-0 left-0';
-  starFavorite.style.filter = 'invert(0.9) sepia(1) saturate(10) hue-rotate(0deg) brightness(1.2)';
-  starFavorite.style.display = 'none'; // Hidden by default
-  starFavorite.dataset.state = 'favorite';
-  starContainer.appendChild(starFavorite);
   
   container.appendChild(headerContainer);
 
@@ -673,6 +710,25 @@ function renderDetails(media) {
   genres.textContent = `Genres: ${media.genres.join(', ')}`;
   details.appendChild(genres);
 
+  // Ajout du bouton pour la bande-annonce
+  if (media.trailer) {
+    const trailerButton = document.createElement('button');
+    trailerButton.className = 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full flex items-center gap-2 mb-4';
+    
+    // Icône de lecture
+    const playIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    playIcon.setAttribute('viewBox', '0 0 24 24');
+    playIcon.setAttribute('fill', 'currentColor');
+    playIcon.setAttribute('class', 'w-5 h-5');
+    playIcon.innerHTML = '<path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />';
+    
+    trailerButton.appendChild(playIcon);
+    trailerButton.appendChild(document.createTextNode('Voir la bande-annonce'));
+    
+    trailerButton.addEventListener('click', () => openTrailerModal(media.trailer));
+    details.appendChild(trailerButton);
+  }
+
   const overview = document.createElement('p');
   overview.className = 'mb-4';
   overview.textContent = media.overview; // Changed from resume to overview
@@ -689,43 +745,115 @@ function renderDetails(media) {
   if (Array.isArray(media.actors)) {
     media.actors.forEach(actor => {
       const card = document.createElement('div');
-    card.className = 'flex items-center gap-3';
+      card.className = 'flex items-center gap-3';
 
-    if (actor.photo) {
-      const img = document.createElement('img');
-      img.src = actor.photo;
-      img.alt = actor.name; // Changed from nom to name
-      img.className = 'w-12 h-12 rounded-full object-cover';
-      card.appendChild(img);
-    }
+      if (actor.photo) {
+        const img = document.createElement('img');
+        img.src = actor.photo;
+        img.alt = actor.name; // Changed from nom to name
+        img.className = 'w-12 h-12 rounded-full object-cover';
+        card.appendChild(img);
+      }
 
-    const infos = document.createElement('div');
-    const name = document.createElement('p'); // Changed from nom to name
-    name.className = 'font-semibold';
-    name.textContent = actor.name; // Changed from nom to name
+      const infos = document.createElement('div');
+      const name = document.createElement('p'); // Changed from nom to name
+      name.className = 'font-semibold';
+      name.textContent = actor.name; // Changed from nom to name
 
-    const role = document.createElement('p');
-    role.className = 'text-sm text-gray-400';
-    role.textContent = `Rôle: ${actor.character}`; // Changed from personnage to character
-    
-    infos.appendChild(name);
-    infos.appendChild(role);
-    card.appendChild(infos);
+      const role = document.createElement('p');
+      role.className = 'text-sm text-gray-400';
+      role.textContent = `Rôle: ${actor.character}`; // Changed from personnage to character
+      
+      infos.appendChild(name);
+      infos.appendChild(role);
+      card.appendChild(infos);
 
-    actorList.appendChild(card);
-  });
-} else {
-  const noActors = document.createElement('p');
-  noActors.className = 'text-sm text-gray-400';
-  noActors.textContent = 'Aucune information sur les acteurs disponible.';
-  actorList.appendChild(noActors);
-}
+      actorList.appendChild(card);
+    });
+  } else {
+    const noActors = document.createElement('p');
+    noActors.className = 'text-sm text-gray-400';
+    noActors.textContent = 'Aucune information sur les acteurs disponible.';
+    actorList.appendChild(noActors);
+  }
 
   details.appendChild(actorList);
   contentWrapper.appendChild(details);
-  container.appendChild(headerContainer);
   container.appendChild(contentWrapper);
   main.appendChild(container);
+
+  // Créer la modal pour la bande-annonce
+  const trailerModal = document.createElement('div');
+  trailerModal.id = 'trailerModal';
+  trailerModal.className = 'trailer-modal';
+  
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
+  
+  const closeButton = document.createElement('span');
+  closeButton.className = 'close-modal';
+  closeButton.innerHTML = '&times;';
+  closeButton.addEventListener('click', closeTrailerModal);
+  
+  const videoContainer = document.createElement('div');
+  videoContainer.className = 'video-container';
+  videoContainer.id = 'videoContainer';
+  
+  modalContent.appendChild(closeButton);
+  modalContent.appendChild(videoContainer);
+  trailerModal.appendChild(modalContent);
+  document.body.appendChild(trailerModal);
+
+  // Fermer la modal si on clique en dehors du contenu
+  trailerModal.addEventListener('click', function(event) {
+    if (event.target === trailerModal) {
+      closeTrailerModal();
+    }
+  });
+
+  // Fermer la modal avec la touche Echap
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeTrailerModal();
+    }
+  });
+}
+
+// Fonction pour ouvrir la modal avec la bande-annonce
+function openTrailerModal(videoKey) {
+  const modal = document.getElementById('trailerModal');
+  const videoContainer = document.getElementById('videoContainer');
+  
+  // Créer l'iframe YouTube
+  videoContainer.innerHTML = `
+    <iframe 
+      src="https://www.youtube.com/embed/${videoKey}?autoplay=1" 
+      title="YouTube video player" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen>
+    </iframe>
+  `;
+  
+  // Afficher la modal
+  modal.classList.add('show');
+  
+  // Empêcher le défilement du body
+  document.body.style.overflow = 'hidden';
+}
+
+// Fonction pour fermer la modal
+function closeTrailerModal() {
+  const modal = document.getElementById('trailerModal');
+  const videoContainer = document.getElementById('videoContainer');
+  
+  // Vider le contenu pour arrêter la vidéo
+  videoContainer.innerHTML = '';
+  
+  // Cacher la modal
+  modal.classList.remove('show');
+  
+  // Réactiver le défilement du body
+  document.body.style.overflow = 'auto';
 }
 
 // ----- Pages spécifiques -----
