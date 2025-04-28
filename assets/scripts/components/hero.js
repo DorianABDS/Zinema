@@ -2,57 +2,57 @@ import { getPopularMovies } from '../api/moviesApi.js';
 
 let currentIndex = 0;
 let intervalId;
+let movies = [];
 
 export async function renderHeroSection() {
-  const movies = await getPopularMovies();
+  movies = await getPopularMovies();
+  if (movies.length === 0) return; // sécurité : si jamais aucun film n'est trouvé
+
   const images = movies.map(movie => `https://image.tmdb.org/t/p/original${movie.backdrop_path || movie.poster_path}`);
 
   const hero = document.createElement('section');
   hero.id = 'hero';
-  hero.className = 'relative w-full h-[80vh] bg-cover bg-center text-white flex items-center justify-center transition-all duration-1000';
+  hero.className = 'relative w-full h-[80vh] bg-cover bg-center text-white flex items-center transition-all duration-1000';
   hero.style.backgroundImage = `url('${images[0]}')`;
 
   const overlay = document.createElement('div');
   overlay.className = 'absolute inset-0 bg-black opacity-60';
 
   const content = document.createElement('div');
-  content.className = 'relative z-10 text-center px-4';
+  content.className = 'relative z-10 text-left px-8'; // aligné à gauche
+
+  const titleLink = document.createElement('a');
+  titleLink.className = 'block'; // tout le bloc est cliquable
 
   const title = document.createElement('h1');
   title.className = 'text-4xl md:text-6xl font-bold mb-4';
-  title.textContent = 'Bienvenue sur Zinema';
 
-  const subtitle = document.createElement('p');
-  subtitle.className = 'text-lg md:text-xl mb-6';
-  subtitle.textContent = 'Découvrez les meilleurs films et séries en un clic';
-
-  const button = document.createElement('a');
-  button.href = '/pages/movies.html';
-  button.className = 'inline-block bg-yellow-600 hover:bg-yellow-700 text-black font-semibold py-3 px-6 rounded-lg transition';  // texte en noir
-  button.textContent = 'Explorer le catalogue';
-
-  // Ajouter un écouteur d'événements pour tester la redirection
-  button.addEventListener('click', (e) => {
-    console.log('Redirection vers movies.html');
-  });
-
-  content.appendChild(title);
-  content.appendChild(subtitle);
-  content.appendChild(button);
-
+  content.appendChild(titleLink);
+  titleLink.appendChild(title);
   hero.appendChild(overlay);
   hero.appendChild(content);
 
   const main = document.querySelector('main') || document.body;
   main.prepend(hero);
 
-  // 🚀 Lancement du diaporama
-  startBackgroundRotation(hero, images);
+  // ✅ Ici on appelle une fonction pour initialiser correctement TOUT de suite l'affichage
+  updateHeroContent(title, titleLink);
+
+  startBackgroundRotation(hero, images, title, titleLink);
 }
 
-function startBackgroundRotation(heroElement, imageArray) {
+// 💡 Nouvelle fonction pour factoriser la mise à jour
+function updateHeroContent(titleElement, titleLinkElement) {
+  const movie = movies[currentIndex];
+  titleElement.textContent = movie.title || movie.name || 'Titre inconnu';
+  titleLinkElement.href = `../pages/details.html?id=${movie.id}&type=movie`;
+}
+
+function startBackgroundRotation(heroElement, imageArray, titleElement, titleLinkElement) {
   intervalId = setInterval(() => {
     currentIndex = (currentIndex + 1) % imageArray.length;
     heroElement.style.backgroundImage = `url('${imageArray[currentIndex]}')`;
-  }, 10000); // 10 secondes
+
+    updateHeroContent(titleElement, titleLinkElement);
+  }, 10000);
 }
