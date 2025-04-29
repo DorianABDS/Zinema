@@ -3,14 +3,14 @@ export function createCarousel({ containerId, items, getTitle, getImage, carouse
     const section = document.createElement('section');
     section.className = "carousel-section my-8 bg-gradient-to-b from-gray-900 via-black to-black/0 py-12 px-4 rounded-xl";
 
-    // TITRE avec paramÃ¨tre personnalisable
+    // TITRE avec paramètre personnalisable
     const heading = document.createElement('h2');
     heading.textContent = carouselTitle;
     heading.className = "text-3xl font-bold text-white mb-6 px-6";
 
     // CONTAINER GLOBAL AVEC FLECHES + CAROUSEL
     const controlWrapper = document.createElement('div');
-    controlWrapper.className = "flex items-center space-x-4 px-6"; // plus de h-*
+    controlWrapper.className = "flex items-center space-x-4 px-6";
 
     // FLECHE GAUCHE
     const prevButton = document.createElement('button');
@@ -23,7 +23,7 @@ export function createCarousel({ containerId, items, getTitle, getImage, carouse
 
     // WRAPPER DU CAROUSEL
     const carouselWrapper = document.createElement('div');
-    carouselWrapper.className = "relative overflow-hidden flex-1";
+    carouselWrapper.className = "relative overflow-hidden flex-1"; // touch-scroll autorisé
 
     // CONTENEUR D'IMAGES
     const carouselContainer = document.createElement('div');
@@ -41,7 +41,7 @@ export function createCarousel({ containerId, items, getTitle, getImage, carouse
         const image = document.createElement('img');
         image.src = getImage(item);
         image.alt = getTitle(item);
-        image.className = "w-full object-contain"; // pas de h-full, garde taille naturelle
+        image.className = "w-full object-contain";
 
         const titleOverlay = document.createElement('div');
         titleOverlay.className = "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-sm px-3 py-2";
@@ -123,21 +123,6 @@ export function createCarousel({ containerId, items, getTitle, getImage, carouse
             currentIndex++;
             updateCarousel();
             isScrolling = false;
-        }
-    });
-
-    // WHEEL SUPPORT
-    carouselContainer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const itemWidth = carouselContainer.querySelector('div').offsetWidth + 24;
-        const visibleItems = Math.floor(carouselWrapper.offsetWidth / itemWidth);
-
-        if (e.deltaY > 0 && currentIndex < totalItems - visibleItems) {
-            currentIndex++;
-            updateCarousel();
-        } else if (e.deltaY < 0 && currentIndex > 0) {
-            currentIndex--;
-            updateCarousel();
         }
     });
 
