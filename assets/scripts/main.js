@@ -635,7 +635,7 @@ function renderDetails(media) {
   }
 
   const container = document.createElement('div');
-  container.className = 'max-w-4xl mx-auto mt-10 bg-gray-800 rounded-xl p-6 text-white shadow-lg';
+  container.className = 'max-w-6xl mx-auto mt-10 bg-gray-800 rounded-xl p-6 text-white shadow-lg';
   container.style.position = 'relative';
 
   // Create flex container for title and star
