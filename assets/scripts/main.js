@@ -482,49 +482,41 @@ async function init() {
   }
 
   // ----- DETAILS PAGE -----
-  else if (isDetailPage) {
-    console.log('Page Détails détectée');
-    initSearch();
-    initializeFavoriteButtons();
-  
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    const type = urlParams.get('type');
-  
-    try {
-      if (id && type === 'movie') {
-        const movie = await fetchMovieDetails(id);
-        movie.id = id;
-        movie.type = 'movie';
-        renderDetails(movie);
-        const reviews = await fetchMovieReviews(id);
-        renderReviews(reviews);
-        try { 
-          // Remplacer initCarouselMovies() par:
-          await initCarouselRecommendations(id, 'movie', movie.title);
-        } catch (error) {
-          console.error('Erreur lors du chargement des recommandations :', error);
-        }
-        syncFavorites();
-      } else if (id && type === 'tv') {
-        const serie = await fetchSeriesDetails(id);
-        serie.id = id;
-        serie.type = 'tv';
-        renderDetails(serie);
-        const reviews = await fetchTvReviews(id);
-        renderReviews(reviews);
-        try {
-          // Remplacer initCarouselSeries() par:
-          await initCarouselRecommendations(id, 'tv', serie.title || serie.name);
-        } catch (error) {
-          console.error('Erreur lors du chargement des recommandations :', error);
-        }
-        syncFavorites();
-      }
-    } catch (error) {
-      console.error('Error loading details:', error);
+else if (isDetailPage) {
+  console.log('Page Détails détectée');
+  initSearch();
+  initializeFavoriteButtons();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const id = urlParams.get('id');
+  const type = urlParams.get('type');
+
+  try {
+    if (id && type === 'movie') {
+      const movie = await fetchMovieDetails(id);
+      if (!movie) throw new Error('Erreur lors du chargement des détails du film.');
+      movie.id = id;
+      movie.type = 'movie';
+      renderDetails(movie);
+      const reviews = await fetchMovieReviews(id);
+      renderReviews(reviews);
+      await initCarouselRecommendations(id, 'movie', movie.title);
+      syncFavorites();
+    } else if (id && type === 'tv') {
+      const serie = await fetchSeriesDetails(id);
+      if (!serie) throw new Error('Erreur lors du chargement des détails de la série.');
+      serie.id = id;
+      serie.type = 'tv';
+      renderDetails(serie);
+      const reviews = await fetchTvReviews(id);
+      renderReviews(reviews);
+      await initCarouselRecommendations(id, 'tv', serie.title || serie.name);
+      syncFavorites();
     }
+  } catch (error) {
+    console.error('Error loading details:', error);
   }
+}
 
   // ----- FAVORITES PAGE -----
   else if (isFavoritesPage) {
@@ -627,6 +619,17 @@ function renderDetails(media) {
         height: 100%;
         border: 0;
       }
+      .poster-container {
+          height: 100%;  /* Adapte la hauteur du conteneur selon les besoins */
+          display: flex;
+          justify-content: center; /* Centre l'image */
+          align-items: center; /* Centre verticalement */
+        }
+
+        img {
+          max-height: 100%; /* Limite la hauteur à celle du conteneur */
+          object-fit: contain; /* Maintient l'image proportionnelle sans la couper */
+        }
     `;
     document.head.appendChild(styleTag);
   }
@@ -687,10 +690,11 @@ function renderDetails(media) {
   contentWrapper.className = 'flex flex-col md:flex-row gap-6';
 
   const poster = document.createElement('img');
-  poster.src = media.poster; // Changed from affiche to poster
-  poster.alt = `Poster of ${media.title}`; // Changed from titre to title
-  poster.className = 'rounded-lg w-full md:w-1/3';
+  poster.src = media.poster; // Image du film/série
+  poster.alt = `Poster of ${media.title}`; // Le titre du film
+  poster.className = 'rounded-lg w-auto h-full object-contain'; // Hauteur dynamique et largeur proportionnelle
   contentWrapper.appendChild(poster);
+  
 
   const details = document.createElement('div');
   details.className = 'flex-1';
@@ -778,6 +782,52 @@ function renderDetails(media) {
   }
 
   details.appendChild(actorList);
+  // --- Ajouter ce bloc après les acteurs ---
+if (media.watchProviders && media.watchProviders.flatrate && media.watchProviders.flatrate.length > 0) {
+  const platformsContainer = document.createElement('div');
+  platformsContainer.className = 'mt-6';
+  const streamingTitle = document.createElement('h3');
+  streamingTitle.className = 'text-xl font-semibold mt-4 mb-2';
+  streamingTitle.textContent = 'Disponible en streaming :';
+  platformsContainer.appendChild(streamingTitle);
+
+  const streamingList = document.createElement('ul');
+  media.watchProviders.flatrate.forEach(platform => {
+    const platformItem = document.createElement('li');
+    platformItem.className = 'flex items-center gap-3';
+
+    // Créer un lien pour la plateforme
+    const platformLink = document.createElement('a');
+    platformLink.className = 'flex items-center gap-2 hover:text-yellow-300';
+    const knownPlatformUrls = {
+      'Netflix': 'https://www.netflix.com',
+      'Netflix Standard with Ads': 'https://www.netflix.com',
+      'Disney Plus': 'https://www.disneyplus.com',
+      'Amazon Prime Video': 'https://www.primevideo.com',
+      'Apple TV Plus': 'https://tv.apple.com',
+      'Canal+': 'https://www.canalplus.com'
+    };
+    
+    platformLink.href = knownPlatformUrls[platform.name] || '#';
+    platformLink.target = '_blank';  // Ouvre dans un nouvel onglet
+
+    const platformImage = document.createElement('img');
+    platformImage.src = platform.logo; // Logo de la plateforme
+    platformImage.alt = platform.name;
+    platformImage.className = 'w-8 h-8';
+    const platformName = document.createElement('span');
+    platformName.textContent = platform.name;
+
+    platformLink.appendChild(platformImage);
+    platformLink.appendChild(platformName);
+
+    platformItem.appendChild(platformLink);
+    streamingList.appendChild(platformItem);
+  });
+  platformsContainer.appendChild(streamingList);
+  details.appendChild(platformsContainer);
+}
+console.log('watchProviders:', media.watchProviders);
   contentWrapper.appendChild(details);
   container.appendChild(contentWrapper);
   main.appendChild(container);
